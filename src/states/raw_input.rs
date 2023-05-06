@@ -1,3 +1,7 @@
+//! Model of the raw input state.
+//!
+//! This is basically just some raw text stored in a `String`.
+
 use crate::data::span::Span;
 use crate::errors::error_context::ErrorContext;
 use crate::states::{RawInput, TextContext};
@@ -10,6 +14,12 @@ impl From<String> for RawInput {
         Self {
             text_ctx: TextContext(text),
         }
+    }
+}
+
+impl AsRef<str> for RawInput {
+    fn as_ref(&self) -> &str {
+        &self.text_ctx.0
     }
 }
 

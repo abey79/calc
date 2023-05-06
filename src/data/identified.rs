@@ -1,3 +1,8 @@
+//! Generic type for things that have an ID, such as AST nodes.
+//!
+//! This type as both a generic type for the "kind" (the content of the structure) and the ID. This
+//! ensure that NodeIds are not used to look up, e.g., tokens.
+
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]

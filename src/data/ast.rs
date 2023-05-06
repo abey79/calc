@@ -1,3 +1,9 @@
+//! This module contains the AST data structures.
+//!
+//! Throughout the code, the "Node" terminology is used to refer to elements of the AST. AST nodes
+//! are assigned a unique `NodeId` when created. Factory functions are also provided to make it easy
+//! to build AST nodes.
+
 use crate::data::identified::{new_id, Identified};
 use std::fmt;
 

@@ -1,3 +1,8 @@
+//! Error context
+//!
+//! An error context strictly refers to the data that is used for error display. Currently, this
+//! consists of only a string with the relevant highlighted source extract.
+
 use std::fmt;
 
 /// The context of an error
@@ -8,7 +13,7 @@ pub struct ErrorContext(String);
 
 impl fmt::Display for ErrorContext {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
+        writeln!(f, "\n\n{}", self.0)
     }
 }
 

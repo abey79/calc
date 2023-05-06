@@ -1,3 +1,7 @@
+//! The tokenizer stage.
+//!
+//! Transforms a `RawInput` into a `TokenizedInput`.
+
 use crate::data::span::{Loc, Span};
 use crate::data::token::{Token, TokenKind};
 use crate::errors::{SyntaxError, TokenizerError};
@@ -50,9 +54,7 @@ impl Tokenizer {
     fn push(&mut self, kind: TokenKind) {
         let span = Span::new(self.start_loc, self.loc);
         let token = Token::new(kind);
-
-        self.token_ctx.token_spans.insert(token.id, span);
-        self.token_ctx.tokens.push(token);
+        self.token_ctx.push_token(token, span);
     }
 
     /// Return the next character in the input stream and update the current location.

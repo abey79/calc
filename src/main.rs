@@ -31,26 +31,6 @@ enum Commands {
     },
 }
 
-//TODO: recreate this
-
-// /// Newtype wrapper over a [`Token`] for the purpose of pretty printing the token stream.
-// struct DisplayToken(Token);
-//
-// impl fmt::Display for DisplayToken {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         let span = format!("{}", self.0.span);
-//         let kind = match self.0.kind {
-//             TokenKind::Name(ref s) => format!("{:10} {:?}", "Name", s),
-//             TokenKind::Int(i) => format!("{:10} {}", "Int", i),
-//             TokenKind::Float(fl) => format!("{:10} {:?}", "Float", fl),
-//             TokenKind::Bool(b) => format!("{:10} {}", "Bool", b),
-//             _ => format!("{:?}", self.0.kind),
-//         };
-//
-//         write!(f, "{:15} {}", span, kind)
-//     }
-// }
-
 fn get_input(path: Option<PathBuf>, code: Option<String>) -> anyhow::Result<RawInput> {
     if let Some(code) = code {
         Ok(RawInput::from(code))
@@ -67,10 +47,9 @@ fn main() -> anyhow::Result<()> {
         Commands::Tokenize { path, code } => {
             let input = get_input(path, code)?;
             let tokenized_input = input.tokenize()?;
-
-            for token in tokenized_input.tokens() {
-                println!("{:?}", token.kind);
-            }
+            let mut dump = String::new();
+            tokenized_input.dump(&mut dump)?;
+            println!("{}", dump);
         }
     }
 

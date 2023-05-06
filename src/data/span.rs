@@ -1,3 +1,5 @@
+//! A span is a range withing a text stream.
+
 use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,3 +1,5 @@
+//! Tokens
+
 use crate::data::identified::{new_id, Identified};
 
 #[derive(Debug, Clone, PartialEq)]

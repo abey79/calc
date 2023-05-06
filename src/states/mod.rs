@@ -1,4 +1,20 @@
-pub mod input;
+//! This module models the compiler pipeline states
+//!
+//! Two types of structures are introduced:
+//! - Contexts: these are structures containing state, as in "state data".
+//! - States: these are structures capturing the current state (as in "state machine") of the
+//!   processed data.
+//!
+//! To disambiguate both "states", I introduce the term "context" to refer to the former.
+//!
+//! States can transform into other states thanks to pipeline functions ("steps").
+//!
+//! For clarity, this file contains only the structure definitions and the very high-level API, such
+//! as state transition. Most of the implementation details are in the submodules.
+
+pub mod raw_input;
+pub mod token_context;
+pub mod tokenized_input;
 
 use crate::data::ast::{Block, NodeId};
 use crate::data::span::Span;
@@ -9,31 +25,23 @@ use std::collections::BTreeMap;
 
 // =================================================================================================
 // CONTEXTS
-//
-// Contexts are state structures, with "state" as in "state data". I use the term "context" to avoid
-// confusion with the "state" in "state machine".
 
 pub struct TextContext(String);
 
 #[derive(Debug, Default)]
 pub struct TokenContext {
-    pub(crate) tokens: Vec<Token>,
-    pub(crate) token_spans: BTreeMap<TokenId, Span>,
+    tokens: Vec<Token>,
+    token_spans: BTreeMap<TokenId, Span>,
 }
 
 #[derive(Debug)]
 pub struct AstContext {
-    pub(crate) nodes: Block,
-    pub(crate) node_spans: BTreeMap<NodeId, TokSpan>,
+    nodes: Block,
+    node_spans: BTreeMap<NodeId, TokSpan>,
 }
 
 // =================================================================================================
 // STATES
-//
-// "State" as in "state machine".
-//
-// These are global states at various stages of the pipeline. Each state implement functions that
-// allows it to be converted to the next state.
 
 pub struct RawInput {
     pub(crate) text_ctx: TextContext,
@@ -42,12 +50,6 @@ pub struct RawInput {
 impl RawInput {
     pub fn tokenize(self) -> Result<TokenizedInput, TokenizerError> {
         pipeline::tokenizer::tokenize(self)
-    }
-}
-
-impl AsRef<str> for RawInput {
-    fn as_ref(&self) -> &str {
-        &self.text_ctx.0
     }
 }
 
