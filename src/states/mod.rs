@@ -24,6 +24,7 @@ use crate::data::token::{Token, TokenId};
 use crate::errors::{ParserError, TokenizerError};
 use crate::pipeline;
 use std::collections::BTreeMap;
+use std::fmt;
 use std::rc::Rc;
 
 // =================================================================================================
@@ -76,6 +77,12 @@ pub struct ParsedInput {
     pub(crate) text_ctx: TextContext,
     pub(crate) token_ctx: TokenContext,
     pub(crate) ast_ctx: AstContext,
+}
+
+impl ParsedInput {
+    pub fn format<W: fmt::Write>(&self, w: &mut W) -> Result<String, fmt::Error> {
+        pipeline::formatter::format(self, w)
+    }
 }
 
 // =================================================================================================

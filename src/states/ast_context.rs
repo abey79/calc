@@ -7,13 +7,17 @@ use std::fmt::Write;
 impl Default for AstContext {
     fn default() -> Self {
         Self {
-            nodes: Block::new(vec![]),
+            nodes: Block::new(vec![]), //TODO: this block is probably best changed to a vec
             node_spans: BTreeMap::new(),
         }
     }
 }
 
 impl AstContext {
+    pub fn nodes(&self) -> &[Stmt] {
+        &self.nodes.kind.stmts
+    }
+
     pub fn push_stmt(&mut self, stmt: Stmt) {
         self.nodes.kind.stmts.push(stmt);
     }

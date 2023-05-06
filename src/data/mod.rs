@@ -2,5 +2,6 @@
 
 pub mod ast;
 pub mod identified;
+pub mod precedence;
 pub mod span;
 pub mod token;

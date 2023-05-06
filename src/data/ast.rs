@@ -49,7 +49,7 @@ pub enum ExprKind {
         right: Box<Expr>,
     },
     UnaryOp {
-        op: UnaryOpKind,
+        op: UnaryOp,
         operand: Box<Expr>,
     },
     Integer(i32),
@@ -148,7 +148,7 @@ impl Expr {
     pub fn unary_op(op: UnaryOp, operand: Expr) -> Self {
         Self {
             kind: ExprKind::UnaryOp {
-                op: op.kind,
+                op,
                 operand: Box::new(operand),
             },
             id: NodeId::new(),
