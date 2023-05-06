@@ -12,16 +12,19 @@
 //! For clarity, this file contains only the structure definitions and the very high-level API, such
 //! as state transition. Most of the implementation details are in the submodules.
 
+pub mod ast_context;
 pub mod raw_input;
+pub mod text_context;
 pub mod token_context;
 pub mod tokenized_input;
 
 use crate::data::ast::{Block, NodeId};
 use crate::data::span::Span;
-use crate::data::token::{TokSpan, Token, TokenId};
-use crate::errors::TokenizerError;
+use crate::data::token::{Token, TokenId};
+use crate::errors::{ParserError, TokenizerError};
 use crate::pipeline;
 use std::collections::BTreeMap;
+use std::rc::Rc;
 
 // =================================================================================================
 // CONTEXTS
@@ -30,7 +33,8 @@ pub struct TextContext(String);
 
 #[derive(Debug, Default)]
 pub struct TokenContext {
-    tokens: Vec<Token>,
+    tokens: Vec<Rc<Token>>,
+    tokens_by_id: BTreeMap<TokenId, Rc<Token>>,
     token_spans: BTreeMap<TokenId, Span>,
 }
 
@@ -59,7 +63,11 @@ pub struct TokenizedInput {
 }
 
 impl TokenizedInput {
-    pub fn tokens(&self) -> &[Token] {
+    pub fn parse(self) -> Result<ParsedInput, ParserError> {
+        pipeline::parser::parse(self)
+    }
+
+    pub fn tokens(&self) -> &[Rc<Token>] {
         &self.token_ctx.tokens
     }
 }
@@ -67,5 +75,20 @@ impl TokenizedInput {
 pub struct ParsedInput {
     pub(crate) text_ctx: TextContext,
     pub(crate) token_ctx: TokenContext,
-    pub(crate) node_ctx: AstContext,
+    pub(crate) ast_ctx: AstContext,
+}
+
+// =================================================================================================
+// MISC
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TokSpan {
+    pub start: TokenId,
+    pub end: TokenId,
+}
+
+impl TokSpan {
+    pub fn new(start: TokenId, end: TokenId) -> Self {
+        Self { start, end }
+    }
 }

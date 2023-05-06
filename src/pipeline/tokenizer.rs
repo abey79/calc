@@ -95,7 +95,8 @@ impl Tokenizer {
 
     fn err<T>(&self, err: SyntaxError) -> Result<T> {
         let span = Span::new(self.loc, self.loc);
-        let new_err = TokenizerError::SyntaxError(err, self.input.error_context(span));
+        let new_err =
+            TokenizerError::SyntaxError(err, self.input.text_ctx.error_context(Some(span)));
 
         Err(new_err)
     }

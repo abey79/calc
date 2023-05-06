@@ -23,7 +23,7 @@ impl Loc {
 /// A span of source code
 ///
 /// Spans are inclusive of both start and end.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Span {
     pub start: Loc,
     pub end: Loc,

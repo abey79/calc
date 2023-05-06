@@ -29,6 +29,17 @@ enum Commands {
         #[arg(short)]
         code: Option<String>,
     },
+
+    /// Parses the input and display the AST
+    #[clap(aliases = &["ast"])]
+    Parse {
+        /// Path to wabbit source file (or stdin if not present)
+        path: Option<PathBuf>,
+
+        /// Wabbit source code
+        #[arg(short)]
+        code: Option<String>,
+    },
 }
 
 fn get_input(path: Option<PathBuf>, code: Option<String>) -> anyhow::Result<RawInput> {
@@ -43,15 +54,25 @@ fn get_input(path: Option<PathBuf>, code: Option<String>) -> anyhow::Result<RawI
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
+
+    let mut dump = String::new();
+
     match cli.command {
         Commands::Tokenize { path, code } => {
             let input = get_input(path, code)?;
             let tokenized_input = input.tokenize()?;
-            let mut dump = String::new();
             tokenized_input.dump(&mut dump)?;
-            println!("{}", dump);
+        }
+
+        Commands::Parse { path, code } => {
+            let input = get_input(path, code)?;
+            let tokenized_input = input.tokenize()?;
+            let ast = tokenized_input.parse()?;
+            ast.ast_ctx.dump(&mut dump)?;
         }
     }
+
+    println!("{}", dump);
 
     Ok(())
 }

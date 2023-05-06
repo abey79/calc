@@ -5,6 +5,7 @@
 //! to build AST nodes.
 
 use crate::data::identified::{new_id, Identified};
+use crate::data::token::TokenKind;
 use std::fmt;
 
 // =================================================================================================
@@ -76,19 +77,50 @@ pub type Block = Identified<BlockKind, NodeId>;
 // =================================================================================================
 // FACTORIES
 
+impl From<&TokenKind> for UnaryOpKind {
+    fn from(value: &TokenKind) -> Self {
+        match value {
+            TokenKind::Plus => Self::Pos,
+            TokenKind::Minus => Self::Neg,
+            _ => panic!("Invalid token kind: {:?}", value),
+        }
+    }
+}
+
 impl UnaryOp {
-    pub fn new(kind: UnaryOpKind) -> Self {
+    pub fn new(kind: impl Into<UnaryOpKind>) -> Self {
         Self {
-            kind,
+            kind: kind.into(),
             id: NodeId::new(),
         }
     }
 }
 
+impl From<&TokenKind> for BinOpKind {
+    fn from(value: &TokenKind) -> Self {
+        match value {
+            TokenKind::Plus => Self::Add,
+            TokenKind::Minus => Self::Sub,
+            TokenKind::Star => Self::Mul,
+            TokenKind::Slash => Self::Div,
+            _ => panic!("Invalid token kind: {:?}", value),
+        }
+    }
+}
+
 impl BinOp {
-    pub fn new(kind: BinOpKind) -> Self {
+    pub fn new(kind: impl Into<BinOpKind>) -> Self {
         Self {
-            kind,
+            kind: kind.into(),
+            id: NodeId::new(),
+        }
+    }
+}
+
+impl VarName {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            kind: name.into(),
             id: NodeId::new(),
         }
     }
@@ -175,6 +207,12 @@ impl Block {
 
 // =================================================================================================
 // UTILITY TRAITS
+
+impl fmt::Display for NodeId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 impl fmt::Display for BinOpKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
