@@ -18,7 +18,7 @@ pub mod text_context;
 pub mod token_context;
 pub mod tokenized_input;
 
-use crate::data::ast::{Block, NodeId};
+use crate::data::ast::{NodeId, Stmt};
 use crate::data::span::Span;
 use crate::data::token::{Token, TokenId};
 use crate::errors::{ParserError, TokenizerError};
@@ -41,7 +41,7 @@ pub struct TokenContext {
 
 #[derive(Debug)]
 pub struct AstContext {
-    nodes: Block,
+    stmts: Vec<Stmt>,
     node_spans: BTreeMap<NodeId, TokSpan>,
 }
 

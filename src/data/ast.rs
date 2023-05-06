@@ -67,13 +67,6 @@ pub enum StmtKind {
 
 pub type Stmt = Identified<StmtKind, NodeId>;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct BlockKind {
-    pub stmts: Vec<Stmt>,
-}
-
-pub type Block = Identified<BlockKind, NodeId>;
-
 // =================================================================================================
 // FACTORIES
 
@@ -191,15 +184,6 @@ impl Stmt {
     pub fn expr(expr: Expr) -> Self {
         Self {
             kind: StmtKind::Expr { expr },
-            id: NodeId::new(),
-        }
-    }
-}
-
-impl Block {
-    pub fn new(stmts: Vec<Stmt>) -> Self {
-        Self {
-            kind: BlockKind { stmts },
             id: NodeId::new(),
         }
     }

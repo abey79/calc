@@ -22,7 +22,7 @@ impl<'a, W: Write> Formatter<'a, W> {
     }
 
     fn format(&mut self) -> fmt::Result {
-        for stmt in self.input.ast_ctx.nodes() {
+        for stmt in self.input.ast_ctx.stmts() {
             self.format_stmt(stmt)?;
             writeln!(self.writer)?;
         }
