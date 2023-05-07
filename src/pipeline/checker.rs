@@ -14,8 +14,8 @@ pub(crate) fn check(input: ParsedState) -> Result<CheckedState> {
     Ok(CheckedState {
         source: input.source,
         token_stream: input.token_stream,
-        ast: input.ast,
-        checked_ast,
+        raw_ast: input.raw_ast,
+        ast: checked_ast,
     })
 }
 
@@ -36,7 +36,7 @@ impl<'a> Checker<'a> {
 
     fn run(&mut self) -> Result<CheckedAst> {
         let mut checked_ast = CheckedAst::new();
-        for stmt in self.input.ast.stmts() {
+        for stmt in self.input.raw_ast.stmts() {
             checked_ast.push_stmt(self.check_stmt(stmt)?);
         }
 

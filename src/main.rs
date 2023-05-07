@@ -16,6 +16,10 @@ mod states;
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+
+    /// Optimize the output
+    #[arg(short, long)]
+    optimize: bool,
 }
 
 #[derive(Subcommand)]
@@ -91,20 +95,40 @@ fn main() -> anyhow::Result<()> {
             let input = get_input(path, code)?;
             let tokenized_input = input.tokenize()?;
             let ast = tokenized_input.parse()?;
-            ast.ast.dump(&mut dump)?;
+
+            if cli.optimize {
+                let checked = ast.check()?;
+                let optimized = checked.optimize();
+                optimized.ast.dump(&mut dump)?;
+            } else {
+                ast.raw_ast.dump(&mut dump)?;
+            }
         }
         Commands::Format { path, code } => {
             let input = get_input(path, code)?;
             let tokenized_input = input.tokenize()?;
             let ast = tokenized_input.parse()?;
-            ast.format(&mut dump)?;
+
+            if cli.optimize {
+                let checked = ast.check()?;
+                let optimized = checked.optimize();
+                optimized.ast.format(&mut dump)?;
+            } else {
+                ast.raw_ast.format(&mut dump)?;
+            }
         }
         Commands::Check { path, code } => {
             let input = get_input(path, code)?;
             let tokenized_input = input.tokenize()?;
             let parsed = tokenized_input.parse()?;
             let checked = parsed.check()?;
-            checked.checked_ast.dump(&mut dump)?;
+
+            if cli.optimize {
+                let optimized = checked.optimize();
+                optimized.ast.dump(&mut dump)?;
+            } else {
+                checked.ast.dump(&mut dump)?;
+            }
         }
     }
 

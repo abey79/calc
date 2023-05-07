@@ -14,7 +14,7 @@ pub(crate) fn parse(input: TokenizedState) -> Result<ParsedState> {
     Ok(ParsedState {
         source: parser.input.source,
         token_stream: parser.input.token_stream,
-        ast: parser.ast,
+        raw_ast: parser.ast,
     })
 }
 
@@ -58,7 +58,7 @@ macro_rules! accept {
 
 struct Parser {
     input: TokenizedState,
-    ast: Ast,
+    ast: Ast<TokSpan>,
 
     // state
     pos: usize,
@@ -71,7 +71,7 @@ impl Parser {
     fn new(input: TokenizedState) -> Self {
         Self {
             input,
-            ast: Ast::default(),
+            ast: Ast::new(),
             pos: 0,
             token_stack: Vec::new(),
         }

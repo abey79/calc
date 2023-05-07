@@ -1,7 +1,8 @@
-//! State after the type checker.
+//! Context data for the checked state.
 //!
 //! In this state, all the AST nodes are decorated with type info.
 
+use crate::context::ast::Ast;
 use crate::data::ast::{Expr, Stmt};
 use crate::data::token_span::TokSpan;
 use std::fmt;
@@ -9,31 +10,11 @@ use std::fmt::Write;
 
 pub type CheckedStmt = Stmt<TypeInfo>;
 pub type CheckedExpr = Expr<TypeInfo>;
+pub type CheckedAst = Ast<TypeInfo>;
 
-#[derive(Debug, Default)]
-pub struct CheckedAst {
-    stmts: Vec<CheckedStmt>,
-}
-
-impl CheckedAst {
-    pub fn new() -> Self {
-        Self { stmts: Vec::new() }
-    }
-
-    pub fn stmts(&self) -> &[CheckedStmt] {
-        &self.stmts
-    }
-
-    pub fn stmts_mut(&mut self) -> &mut Vec<CheckedStmt> {
-        &mut self.stmts
-    }
-
-    pub fn push_stmt(&mut self, stmt: CheckedStmt) {
-        self.stmts.push(stmt);
-    }
-
-    pub fn dump<W: Write>(&self, w: &mut W) -> std::fmt::Result {
-        for stmt in &self.stmts {
+impl Ast<TypeInfo> {
+    pub fn dump<W: Write>(&self, w: &mut W) -> fmt::Result {
+        for stmt in self.stmts() {
             writeln!(w, "\n{:#?}", stmt)?;
         }
 

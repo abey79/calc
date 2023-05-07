@@ -1,29 +1,36 @@
-use crate::data::ast::{Expr, ExprKind, Stmt, StmtKind};
-use crate::data::token_span::TokSpan;
-use crate::states::ParsedState;
-use std::fmt;
-use std::fmt::Write;
+//! Formatter
+//!
+//! This pipeline stage operates on a generic `Ast<T>` context data, as it doesn't require any AST
+//! metadata. This means that it can be run on either `ParsedState` or `CheckedState`.
 
-pub(crate) fn format<W: Write>(input: &ParsedState, writer: &mut W) -> Result<String, fmt::Error> {
+use crate::context::ast::Ast;
+use crate::data::ast::{Expr, ExprKind, Stmt, StmtKind};
+use std::fmt;
+use std::fmt::{Debug, Display, Write};
+
+pub(crate) fn format<T: Debug + Display, W: Write>(
+    input: &Ast<T>,
+    writer: &mut W,
+) -> Result<String, fmt::Error> {
     let mut formatter = Formatter::new(input, writer);
     formatter.format()?;
     Ok(String::new())
 }
 
-struct Formatter<'a, W: Write> {
-    input: &'a ParsedState,
+struct Formatter<'a, T: Debug + Display, W: Write> {
+    input: &'a Ast<T>,
     writer: &'a mut W,
     // here there would be additional state, e.g. indentation level
     // nothing because indentation is not needed for this toy language
 }
 
-impl<'a, W: Write> Formatter<'a, W> {
-    fn new(input: &'a ParsedState, writer: &'a mut W) -> Self {
+impl<'a, T: Debug + Display, W: Write> Formatter<'a, T, W> {
+    fn new(input: &'a Ast<T>, writer: &'a mut W) -> Self {
         Self { input, writer }
     }
 
     fn format(&mut self) -> fmt::Result {
-        for stmt in self.input.ast.stmts() {
+        for stmt in self.input.stmts() {
             self.format_stmt(stmt)?;
             writeln!(self.writer)?;
         }
@@ -31,7 +38,7 @@ impl<'a, W: Write> Formatter<'a, W> {
         Ok(())
     }
 
-    fn format_stmt(&mut self, stmt: &Stmt<TokSpan>) -> fmt::Result {
+    fn format_stmt(&mut self, stmt: &Stmt<T>) -> fmt::Result {
         match &stmt.kind {
             StmtKind::Assign { name, value } => {
                 write!(self.writer, "{} = ", name)?;
@@ -52,7 +59,7 @@ impl<'a, W: Write> Formatter<'a, W> {
         Ok(())
     }
 
-    fn format_expr(&mut self, expr: &Expr<TokSpan>) -> fmt::Result {
+    fn format_expr(&mut self, expr: &Expr<T>) -> fmt::Result {
         match &expr.kind {
             ExprKind::Variable(name) => write!(self.writer, "{}", name)?,
             ExprKind::BinOp { op, left, right } => {
@@ -89,7 +96,7 @@ impl<'a, W: Write> Formatter<'a, W> {
         Ok(())
     }
 
-    fn format_expr_paren(&mut self, expr: &Expr<TokSpan>) -> fmt::Result {
+    fn format_expr_paren(&mut self, expr: &Expr<T>) -> fmt::Result {
         write!(self.writer, "(")?;
         self.format_expr(expr)?;
         write!(self.writer, ")")

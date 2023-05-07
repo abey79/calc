@@ -15,16 +15,22 @@ struct Optimizer {
     input: CheckedState,
 }
 
+// Note:
+// As it stands, this object is useless as not local state is needed, and could be replaced by a
+// functions. Clippy rightly complains about this, thus the #[allow(only_used_in_recursion)].
+// However, improved optimisation would require state (e.g. variable substitution).
+
+#[allow(clippy::only_used_in_recursion)]
 impl Optimizer {
     fn new(input: CheckedState) -> Self {
         Self { input }
     }
 
     fn run(mut self) -> CheckedState {
-        let old_stmts: Vec<_> = self.input.checked_ast.stmts_mut().drain(..).collect();
+        let old_stmts: Vec<_> = self.input.ast.stmts_mut().drain(..).collect();
         old_stmts.into_iter().for_each(|stmt| {
             let new_stmt = self.optimize_stmt(stmt);
-            self.input.checked_ast.push_stmt(new_stmt);
+            self.input.ast.push_stmt(new_stmt);
         });
 
         self.input
@@ -40,7 +46,7 @@ impl Optimizer {
     fn optimize_expr(&mut self, expr: CheckedExpr) -> CheckedExpr {
         use ExprKind::*;
 
-        let new_expr = match expr.kind {
+        match expr.kind {
             BinOp { op, left, right } => {
                 let new_left = self.optimize_expr(*left);
                 let new_right = self.optimize_expr(*right);
@@ -52,9 +58,7 @@ impl Optimizer {
                 }
             }
             _ => expr,
-        };
-
-        new_expr
+        }
     }
 }
 
