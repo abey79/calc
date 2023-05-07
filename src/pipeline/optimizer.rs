@@ -39,7 +39,7 @@ impl Optimizer {
     fn optimize_expr(&mut self, expr: Expr) -> Expr {
         use ExprKind::*;
 
-        let id = expr.id;
+        let id = expr.meta;
         let new_expr = match expr.kind {
             BinOp { op, left, right } => {
                 let new_left = self.optimize_expr(*left);
@@ -54,7 +54,7 @@ impl Optimizer {
             _ => expr,
         };
 
-        self.input.ast.copy_span(id, new_expr.id);
+        self.input.ast.copy_span(id, new_expr.meta);
 
         new_expr
     }

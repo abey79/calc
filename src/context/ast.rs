@@ -1,41 +1,25 @@
-use crate::data::ast::{NodeId, Stmt};
-use crate::data::token::TokenId;
+use crate::data::ast::Stmt;
+use crate::data::meta::Meta;
+use crate::data::span::Span;
 use crate::data::token_span::TokSpan;
-use std::collections::BTreeMap;
 use std::fmt::Write;
 
 #[derive(Debug, Default)]
 pub struct Ast {
-    stmts: Vec<Stmt>,
-    node_spans: BTreeMap<NodeId, TokSpan>,
+    stmts: Vec<Stmt<TokSpan>>,
 }
 
 impl Ast {
-    pub fn stmts(&self) -> &[Stmt] {
+    pub fn stmts(&self) -> &[Stmt<TokSpan>] {
         &self.stmts
     }
 
-    pub fn stmts_mut(&mut self) -> &mut Vec<Stmt> {
+    pub fn stmts_mut(&mut self) -> &mut Vec<Stmt<TokSpan>> {
         &mut self.stmts
     }
 
-    pub fn push_stmt(&mut self, stmt: Stmt) {
+    pub fn push_stmt(&mut self, stmt: Stmt<TokSpan>) {
         self.stmts.push(stmt);
-    }
-
-    pub fn push_span(&mut self, id: NodeId, from: Option<TokenId>, to: Option<TokenId>) {
-        if let (Some(from), Some(to)) = (from, to) {
-            self.node_spans.insert(id, TokSpan::new(from, to));
-        }
-    }
-
-    pub fn copy_span(&mut self, from: NodeId, to: NodeId) {
-        if from == to {
-            return;
-        }
-        if let Some(span) = self.node_spans.get(&from) {
-            self.node_spans.insert(to, *span);
-        }
     }
 
     pub fn dump<W: Write>(&self, w: &mut W) -> std::fmt::Result {
@@ -44,5 +28,16 @@ impl Ast {
         }
 
         Ok(())
+    }
+}
+
+// Provide convenient methods for AST nodes parametrized by a token span.
+impl<K> Meta<K, TokSpan> {
+    pub fn tok_span(&self) -> TokSpan {
+        self.meta.clone()
+    }
+
+    pub fn span(&self) -> Span {
+        self.meta.span()
     }
 }

@@ -5,34 +5,28 @@
 
 use std::fmt;
 use std::fmt::{Debug, Display};
-use std::sync::atomic::{AtomicUsize, Ordering};
 
-#[derive(Clone, Copy, PartialEq, Default)]
-pub struct Identified<K, I> {
+#[derive(Clone, PartialEq, Default)]
+pub struct Meta<K, I> {
     pub kind: K,
-    pub id: I,
+    pub meta: I,
 }
 
-impl<K: Display, I> Display for Identified<K, I> {
+impl<K: Display, I> Display for Meta<K, I> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.kind.fmt(f)
     }
 }
 
-impl<K: Debug, I: Display> Debug for Identified<K, I> {
+impl<K: Debug, I: Display> Debug for Meta<K, I> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "[{}] ", self.id)?;
+        write!(f, "[{}] ", self.meta)?;
         self.kind.fmt(f)
     }
 }
 
-impl<K, I> AsRef<K> for Identified<K, I> {
+impl<K, I> AsRef<K> for Meta<K, I> {
     fn as_ref(&self) -> &K {
         &self.kind
     }
-}
-
-pub fn new_id() -> usize {
-    static COUNTER: AtomicUsize = AtomicUsize::new(0);
-    COUNTER.fetch_add(1, Ordering::Relaxed)
 }

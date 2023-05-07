@@ -16,7 +16,8 @@ pub struct ParsedState {
 
 impl ParsedState {
     pub fn optimize(self) -> Self {
-        pipeline::optimizer::optimize(self)
+        self //TODO: fixme
+             //pipeline::optimizer::optimize(self)
     }
     pub fn format<W: fmt::Write>(&self, w: &mut W) -> Result<String, fmt::Error> {
         pipeline::formatter::format(self, w)

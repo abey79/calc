@@ -1,6 +1,7 @@
 //! Tokens
 
-use crate::data::identified::{new_id, Identified};
+use crate::data::meta::Meta;
+use crate::data::span::Span;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -45,28 +46,17 @@ impl fmt::Display for TokenKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct TokenId(usize);
-
-impl TokenId {
-    pub fn new() -> Self {
-        Self(new_id())
-    }
-}
-
-impl fmt::Display for TokenId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-pub type Token = Identified<TokenKind, TokenId>;
+/// Token type.
+///
+/// This is an RC pointer to a token kind, as token will be passed around a lot.
+pub type Token = Meta<TokenKind, Span>;
 
 impl Token {
-    pub fn new(kind: TokenKind) -> Self {
-        Self {
-            kind,
-            id: TokenId::new(),
-        }
+    pub fn new(kind: TokenKind, span: Span) -> Self {
+        Self { kind, meta: span }
+    }
+
+    pub fn span(&self) -> Span {
+        self.meta
     }
 }

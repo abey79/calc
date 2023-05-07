@@ -4,29 +4,19 @@
 //! are assigned a unique `NodeId` when created. Factory functions are also provided to make it easy
 //! to build AST nodes.
 
-use crate::data::identified::{new_id, Identified};
+use crate::data::meta::Meta;
 use crate::data::token::TokenKind;
 use std::fmt;
+use std::fmt::{Debug, Display};
 
 // =================================================================================================
 // DATA STRUCTURES
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct NodeId(usize);
-
-impl NodeId {
-    pub fn new() -> Self {
-        Self(new_id())
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnaryOpKind {
     Pos,
     Neg,
 }
-
-pub type UnaryOp = Identified<UnaryOpKind, NodeId>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BinOpKind {
@@ -36,36 +26,34 @@ pub enum BinOpKind {
     Div,
 }
 
-pub type BinOp = Identified<BinOpKind, NodeId>;
-
-pub type VarName = Identified<String, NodeId>;
-
 #[derive(Debug, Clone, PartialEq)]
-pub enum ExprKind {
-    Variable(VarName),
+pub enum ExprKind<T: Debug + Display> {
+    Variable(VarName<T>),
     BinOp {
-        op: BinOp,
-        left: Box<Expr>,
-        right: Box<Expr>,
+        op: BinOp<T>,
+        left: Box<Expr<T>>,
+        right: Box<Expr<T>>,
     },
     UnaryOp {
-        op: UnaryOp,
-        operand: Box<Expr>,
+        op: UnaryOp<T>,
+        operand: Box<Expr<T>>,
     },
     Integer(i32),
     Float(f64),
 }
 
-pub type Expr = Identified<ExprKind, NodeId>;
-
 #[derive(Debug, Clone, PartialEq)]
-pub enum StmtKind {
-    Assign { name: VarName, value: Expr },
-    Print { expr: Expr },
-    Expr { expr: Expr },
+pub enum StmtKind<T: Debug + Display> {
+    Assign { name: VarName<T>, value: Expr<T> },
+    Print { expr: Expr<T> },
+    Expr { expr: Expr<T> },
 }
 
-pub type Stmt = Identified<StmtKind, NodeId>;
+pub type BinOp<T> = Meta<BinOpKind, T>;
+pub type UnaryOp<T> = Meta<UnaryOpKind, T>;
+pub type VarName<T> = Meta<String, T>;
+pub type Expr<T> = Meta<ExprKind<T>, T>;
+pub type Stmt<T> = Meta<StmtKind<T>, T>;
 
 // =================================================================================================
 // FACTORIES
@@ -80,11 +68,11 @@ impl From<&TokenKind> for UnaryOpKind {
     }
 }
 
-impl UnaryOp {
-    pub fn new(kind: impl Into<UnaryOpKind>) -> Self {
+impl<T> UnaryOp<T> {
+    pub fn new(kind: impl Into<UnaryOpKind>, meta: impl Into<T>) -> Self {
         Self {
             kind: kind.into(),
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 }
@@ -101,102 +89,96 @@ impl From<&TokenKind> for BinOpKind {
     }
 }
 
-impl BinOp {
-    pub fn new(kind: impl Into<BinOpKind>) -> Self {
+impl<T> BinOp<T> {
+    pub fn new(kind: impl Into<BinOpKind>, meta: impl Into<T>) -> Self {
         Self {
             kind: kind.into(),
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 }
 
-impl VarName {
-    pub fn new(name: impl Into<String>) -> Self {
+impl<T> VarName<T> {
+    pub fn new(name: impl Into<String>, meta: impl Into<T>) -> Self {
         Self {
             kind: name.into(),
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 }
 
-impl Expr {
-    pub fn variable(name: impl Into<VarName>) -> Self {
+impl<T: Debug + Display> Expr<T> {
+    pub fn variable(name: impl Into<VarName<T>>, meta: impl Into<T>) -> Self {
         Self {
             kind: ExprKind::Variable(name.into()),
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 
-    pub fn bin_op(op: BinOp, left: Expr, right: Expr) -> Self {
+    pub fn bin_op(op: BinOp<T>, left: Expr<T>, right: Expr<T>, meta: impl Into<T>) -> Self {
         Self {
             kind: ExprKind::BinOp {
                 op,
                 left: Box::new(left),
                 right: Box::new(right),
             },
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 
-    pub fn unary_op(op: UnaryOp, operand: Expr) -> Self {
+    pub fn unary_op(op: UnaryOp<T>, operand: Expr<T>, meta: impl Into<T>) -> Self {
         Self {
             kind: ExprKind::UnaryOp {
                 op,
                 operand: Box::new(operand),
             },
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 
-    pub fn integer(value: i32) -> Self {
+    pub fn integer(value: i32, meta: impl Into<T>) -> Self {
         Self {
             kind: ExprKind::Integer(value),
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 
-    pub fn float(value: f64) -> Self {
+    pub fn float(value: f64, meta: impl Into<T>) -> Self {
         Self {
             kind: ExprKind::Float(value),
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 }
 
-impl Stmt {
-    pub fn assign(name: impl Into<VarName>, value: Expr) -> Self {
+impl<T: Debug + Display> Stmt<T> {
+    pub fn assign(name: impl Into<VarName<T>>, value: Expr<T>, meta: impl Into<T>) -> Self {
         Self {
             kind: StmtKind::Assign {
                 name: name.into(),
                 value,
             },
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 
-    pub fn print(expr: Expr) -> Self {
+    pub fn print(expr: Expr<T>, meta: impl Into<T>) -> Self {
         Self {
             kind: StmtKind::Print { expr },
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 
-    pub fn expr(expr: Expr) -> Self {
+    pub fn expr(expr: Expr<T>, meta: impl Into<T>) -> Self {
         Self {
             kind: StmtKind::Expr { expr },
-            id: NodeId::new(),
+            meta: meta.into(),
         }
     }
 }
 
 // =================================================================================================
 // UTILITY TRAITS
-
-impl fmt::Display for NodeId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
 
 impl fmt::Display for BinOpKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -214,15 +196,6 @@ impl fmt::Display for UnaryOpKind {
         match self {
             Self::Neg => write!(f, "-"),
             Self::Pos => write!(f, "+"),
-        }
-    }
-}
-
-impl From<&str> for VarName {
-    fn from(s: &str) -> Self {
-        Self {
-            kind: s.to_string(),
-            id: NodeId::new(),
         }
     }
 }

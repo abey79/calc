@@ -54,8 +54,8 @@ impl Tokenizer {
     /// Push a token into the token context.
     fn push(&mut self, kind: TokenKind) {
         let span = Span::new(self.start_loc, self.loc);
-        let token = Token::new(kind);
-        self.token_stream.push_token(token, span);
+        let token = Token::new(kind, span);
+        self.token_stream.push_token(token);
     }
 
     /// Return the next character in the input stream and update the current location.

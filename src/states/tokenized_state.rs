@@ -3,8 +3,6 @@
 use crate::context::source::Source;
 use crate::context::token_stream::TokenStream;
 use crate::data::token::{Token, TokenKind};
-use crate::data::token_span::TokSpan;
-use crate::errors::error_message::ErrorMessage;
 use crate::errors::ParserError;
 use crate::pipeline;
 use crate::states::ParsedState;
@@ -29,11 +27,7 @@ impl TokenizedState {
 impl TokenizedState {
     pub fn dump<W: Write>(&self, writer: &mut W) -> Result<(), std::fmt::Error> {
         for token in self.token_stream.tokens() {
-            let span = if let Some(span) = self.token_stream.span_from_id(token.id) {
-                format!("{}", span)
-            } else {
-                "???".to_string()
-            };
+            let span = format!("{}", token.span());
 
             let kind_str = match token.kind {
                 TokenKind::Name(ref s) => format!("{:10} {:?}", "Name", s),
@@ -46,10 +40,5 @@ impl TokenizedState {
         }
 
         Ok(())
-    }
-
-    pub fn error_context(&self, tok_span: TokSpan) -> ErrorMessage {
-        self.source
-            .error_message(self.token_stream.span_from_tok_span(tok_span))
     }
 }

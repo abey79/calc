@@ -1,4 +1,5 @@
 use crate::data::ast::{Expr, ExprKind, Stmt, StmtKind};
+use crate::data::token_span::TokSpan;
 use crate::states::ParsedState;
 use std::fmt;
 use std::fmt::Write;
@@ -30,7 +31,7 @@ impl<'a, W: Write> Formatter<'a, W> {
         Ok(())
     }
 
-    fn format_stmt(&mut self, stmt: &Stmt) -> fmt::Result {
+    fn format_stmt(&mut self, stmt: &Stmt<TokSpan>) -> fmt::Result {
         match &stmt.kind {
             StmtKind::Assign { name, value } => {
                 write!(self.writer, "{} = ", name)?;
@@ -51,7 +52,7 @@ impl<'a, W: Write> Formatter<'a, W> {
         Ok(())
     }
 
-    fn format_expr(&mut self, expr: &Expr) -> fmt::Result {
+    fn format_expr(&mut self, expr: &Expr<TokSpan>) -> fmt::Result {
         match &expr.kind {
             ExprKind::Variable(name) => write!(self.writer, "{}", name)?,
             ExprKind::BinOp { op, left, right } => {
@@ -88,7 +89,7 @@ impl<'a, W: Write> Formatter<'a, W> {
         Ok(())
     }
 
-    fn format_expr_paren(&mut self, expr: &Expr) -> fmt::Result {
+    fn format_expr_paren(&mut self, expr: &Expr<TokSpan>) -> fmt::Result {
         write!(self.writer, "(")?;
         self.format_expr(expr)?;
         write!(self.writer, ")")
