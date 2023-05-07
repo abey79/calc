@@ -20,6 +20,14 @@ impl CheckedAst {
         Self { stmts: Vec::new() }
     }
 
+    pub fn stmts(&self) -> &[CheckedStmt] {
+        &self.stmts
+    }
+
+    pub fn stmts_mut(&mut self) -> &mut Vec<CheckedStmt> {
+        &mut self.stmts
+    }
+
     pub fn push_stmt(&mut self, stmt: CheckedStmt) {
         self.stmts.push(stmt);
     }

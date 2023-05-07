@@ -23,7 +23,7 @@ enum Commands {
     /// Tokenize the input and display the tokens
     #[clap(aliases = &["tok"])]
     Tokenize {
-        /// Path to wabbit source file (or stdin if not present)
+        /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
         /// Wabbit source code
@@ -34,7 +34,7 @@ enum Commands {
     /// Parses the input and display the AST
     #[clap(aliases = &["ast"])]
     Parse {
-        /// Path to wabbit source file (or stdin if not present)
+        /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
         /// Wabbit source code
@@ -45,7 +45,7 @@ enum Commands {
     /// Parses the input and display the AST
     #[clap(aliases = &["fmt", "formatter"])]
     Format {
-        /// Path to wabbit source file (or stdin if not present)
+        /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
         /// Wabbit source code
@@ -56,7 +56,7 @@ enum Commands {
     /// Parses the input and display the AST
     #[clap(aliases = &["chk", "checker"])]
     Check {
-        /// Path to wabbit source file (or stdin if not present)
+        /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
         /// Wabbit source code
