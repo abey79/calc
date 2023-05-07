@@ -18,6 +18,10 @@ impl AstContext {
         &self.stmts
     }
 
+    pub fn stmts_mut(&mut self) -> &mut Vec<Stmt> {
+        &mut self.stmts
+    }
+
     pub fn push_stmt(&mut self, stmt: Stmt) {
         self.stmts.push(stmt);
     }
@@ -25,6 +29,15 @@ impl AstContext {
     pub fn push_span(&mut self, id: NodeId, from: Option<TokenId>, to: Option<TokenId>) {
         if let (Some(from), Some(to)) = (from, to) {
             self.node_spans.insert(id, TokSpan::new(from, to));
+        }
+    }
+
+    pub fn copy_span(&mut self, from: NodeId, to: NodeId) {
+        if from == to {
+            return;
+        }
+        if let Some(span) = self.node_spans.get(&from) {
+            self.node_spans.insert(to, *span);
         }
     }
 

@@ -80,6 +80,9 @@ pub struct ParsedInput {
 }
 
 impl ParsedInput {
+    pub fn optimize(self) -> Self {
+        pipeline::optimizer::optimize(self)
+    }
     pub fn format<W: fmt::Write>(&self, w: &mut W) -> Result<String, fmt::Error> {
         pipeline::formatter::format(self, w)
     }
