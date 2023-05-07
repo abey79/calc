@@ -1,13 +1,18 @@
 use crate::data::span::Span;
-use crate::errors::error_context::ErrorContext;
-use crate::states::TextContext;
+use crate::errors::error_message::ErrorMessage;
 
-impl TextContext {
+pub struct Source(String);
+
+impl Source {
+    pub fn new(source: String) -> Self {
+        Self(source)
+    }
+
     pub fn source(&self) -> &str {
         &self.0
     }
 
-    pub fn error_context(&self, span: Option<Span>) -> ErrorContext {
+    pub fn error_message(&self, span: Option<Span>) -> ErrorMessage {
         if self.source().is_empty() {
             return "".into();
         }

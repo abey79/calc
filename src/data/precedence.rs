@@ -15,7 +15,7 @@ impl BinOpKind {
 
 impl UnaryOpKind {
     pub const fn precedence(&self) -> u8 {
-        return 6;
+        6
     }
 }
 

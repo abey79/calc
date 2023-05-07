@@ -2,26 +2,40 @@
 //!
 //! This is basically just some raw text stored in a `String`.
 
-use crate::states::{RawInput, TextContext};
+use crate::context::source::Source;
+
+use crate::errors::TokenizerError;
+use crate::pipeline;
+use crate::states::TokenizedState;
 use std::io;
 use std::io::Read;
 use std::path::PathBuf;
 
-impl From<String> for RawInput {
+pub struct InputState {
+    pub(crate) source: Source,
+}
+
+impl InputState {
+    pub fn tokenize(self) -> Result<TokenizedState, TokenizerError> {
+        pipeline::tokenizer::tokenize(self)
+    }
+}
+
+impl From<String> for InputState {
     fn from(text: String) -> Self {
         Self {
-            text_ctx: TextContext(text),
+            source: Source::new(text),
         }
     }
 }
 
-impl AsRef<str> for RawInput {
+impl AsRef<str> for InputState {
     fn as_ref(&self) -> &str {
-        &self.text_ctx.0
+        self.source.source()
     }
 }
 
-impl RawInput {
+impl InputState {
     pub fn from_file(path: PathBuf) -> io::Result<Self> {
         let text = std::fs::read_to_string(path)?;
         Ok(Self::from(text))
@@ -34,6 +48,6 @@ impl RawInput {
     }
 
     pub fn source(&self) -> &str {
-        &self.text_ctx.0
+        self.source.source()
     }
 }

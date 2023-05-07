@@ -1,28 +1,28 @@
 use crate::data::ast::{Expr, ExprKind, Stmt, StmtKind};
-use crate::states::ParsedInput;
+use crate::states::ParsedState;
 use std::fmt;
 use std::fmt::Write;
 
-pub(crate) fn format<W: Write>(input: &ParsedInput, writer: &mut W) -> Result<String, fmt::Error> {
+pub(crate) fn format<W: Write>(input: &ParsedState, writer: &mut W) -> Result<String, fmt::Error> {
     let mut formatter = Formatter::new(input, writer);
     formatter.format()?;
     Ok(String::new())
 }
 
 struct Formatter<'a, W: Write> {
-    input: &'a ParsedInput,
+    input: &'a ParsedState,
     writer: &'a mut W,
     // here there would be additional state, e.g. indentation level
     // nothing because indentation is not needed for this toy language
 }
 
 impl<'a, W: Write> Formatter<'a, W> {
-    fn new(input: &'a ParsedInput, writer: &'a mut W) -> Self {
+    fn new(input: &'a ParsedState, writer: &'a mut W) -> Self {
         Self { input, writer }
     }
 
     fn format(&mut self) -> fmt::Result {
-        for stmt in self.input.ast_ctx.stmts() {
+        for stmt in self.input.ast.stmts() {
             self.format_stmt(stmt)?;
             writeln!(self.writer)?;
         }

@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
-use crate::states::RawInput;
+use crate::states::InputState;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+mod context;
 mod data;
 mod errors;
 mod pipeline;
@@ -53,13 +54,13 @@ enum Commands {
     },
 }
 
-fn get_input(path: Option<PathBuf>, code: Option<String>) -> anyhow::Result<RawInput> {
+fn get_input(path: Option<PathBuf>, code: Option<String>) -> anyhow::Result<InputState> {
     if let Some(code) = code {
-        Ok(RawInput::from(code))
+        Ok(InputState::from(code))
     } else if let Some(path) = path {
-        Ok(RawInput::from_file(path)?)
+        Ok(InputState::from_file(path)?)
     } else {
-        Ok(RawInput::from_stdin()?)
+        Ok(InputState::from_stdin()?)
     }
 }
 
@@ -79,7 +80,7 @@ fn main() -> anyhow::Result<()> {
             let input = get_input(path, code)?;
             let tokenized_input = input.tokenize()?;
             let ast = tokenized_input.parse()?;
-            ast.ast_ctx.dump(&mut dump)?;
+            ast.ast.dump(&mut dump)?;
         }
         Commands::Format { path, code } => {
             let input = get_input(path, code)?;

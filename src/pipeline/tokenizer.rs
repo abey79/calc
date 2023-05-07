@@ -2,25 +2,26 @@
 //!
 //! Transforms a `RawInput` into a `TokenizedInput`.
 
+use crate::context::token_stream::TokenStream;
 use crate::data::span::{Loc, Span};
 use crate::data::token::{Token, TokenKind};
 use crate::errors::{SyntaxError, TokenizerError};
-use crate::states::{RawInput, TokenContext, TokenizedInput};
+use crate::states::{InputState, TokenizedState};
 
 type Result<T> = std::result::Result<T, TokenizerError>;
 
-pub(crate) fn tokenize(input: RawInput) -> Result<TokenizedInput> {
+pub(crate) fn tokenize(input: InputState) -> Result<TokenizedState> {
     let mut tokenizer = Tokenizer::new(input);
     tokenizer.run()?;
-    Ok(TokenizedInput {
-        text_ctx: tokenizer.input.text_ctx,
-        token_ctx: tokenizer.token_ctx,
+    Ok(TokenizedState {
+        source: tokenizer.input.source,
+        token_stream: tokenizer.token_stream,
     })
 }
 
 /// Implement the tokenizer stage.
 struct Tokenizer {
-    input: RawInput,
+    input: InputState,
 
     /// current position in the input, updated by [`next()`]
     pos: usize,
@@ -32,29 +33,29 @@ struct Tokenizer {
     start_loc: Loc,
 
     /// current stream of token
-    token_ctx: TokenContext,
+    token_stream: TokenStream,
 }
 
 impl Tokenizer {
-    fn new(input: RawInput) -> Self {
+    fn new(input: InputState) -> Self {
         Self {
             input,
             pos: 0,
             loc: Loc::default(),
             start_loc: Loc::default(),
-            token_ctx: TokenContext::default(),
+            token_stream: TokenStream::default(),
         }
     }
 
     fn source(&self) -> &str {
-        &self.input.as_ref()
+        self.input.as_ref()
     }
 
     /// Push a token into the token context.
     fn push(&mut self, kind: TokenKind) {
         let span = Span::new(self.start_loc, self.loc);
         let token = Token::new(kind);
-        self.token_ctx.push_token(token, span);
+        self.token_stream.push_token(token, span);
     }
 
     /// Return the next character in the input stream and update the current location.
@@ -95,8 +96,7 @@ impl Tokenizer {
 
     fn err<T>(&self, err: SyntaxError) -> Result<T> {
         let span = Span::new(self.loc, self.loc);
-        let new_err =
-            TokenizerError::SyntaxError(err, self.input.text_ctx.error_context(Some(span)));
+        let new_err = TokenizerError::SyntaxError(err, self.input.source.error_message(Some(span)));
 
         Err(new_err)
     }

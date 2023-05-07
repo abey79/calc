@@ -1,41 +1,39 @@
 use crate::data::ast::{BinOp, BinOpKind, Expr, ExprKind, Stmt, StmtKind};
 use crate::errors::OptimizerError;
-use crate::states::ParsedInput;
+use crate::states::ParsedState;
 use std::ops::{Add, Div, Mul, Sub};
 
 type Result<T> = std::result::Result<T, OptimizerError>;
 
-pub(crate) fn optimize(input: ParsedInput) -> ParsedInput {
+pub(crate) fn optimize(input: ParsedState) -> ParsedState {
     let optimizer = Optimizer::new(input);
     optimizer.run()
 }
 
 struct Optimizer {
-    input: ParsedInput,
+    input: ParsedState,
 }
 
 impl Optimizer {
-    fn new(input: ParsedInput) -> Self {
+    fn new(input: ParsedState) -> Self {
         Self { input }
     }
 
-    fn run(mut self) -> ParsedInput {
-        let old_stmts: Vec<_> = self.input.ast_ctx.stmts_mut().drain(..).collect();
+    fn run(mut self) -> ParsedState {
+        let old_stmts: Vec<_> = self.input.ast.stmts_mut().drain(..).collect();
         old_stmts.into_iter().for_each(|stmt| {
             let new_stmt = self.optimize_stmt(stmt);
-            self.input.ast_ctx.push_stmt(new_stmt);
+            self.input.ast.push_stmt(new_stmt);
         });
 
         self.input
     }
 
     fn optimize_stmt(&mut self, stmt: Stmt) -> Stmt {
-        let new_stmt = match stmt.kind {
+        match stmt.kind {
             StmtKind::Expr { expr } => Stmt::expr(self.optimize_expr(expr)),
             _ => stmt,
-        };
-
-        return new_stmt;
+        }
     }
 
     fn optimize_expr(&mut self, expr: Expr) -> Expr {
@@ -56,9 +54,9 @@ impl Optimizer {
             _ => expr,
         };
 
-        self.input.ast_ctx.copy_span(id, new_expr.id);
+        self.input.ast.copy_span(id, new_expr.id);
 
-        return new_expr;
+        new_expr
     }
 }
 

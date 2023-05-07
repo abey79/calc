@@ -1,18 +1,19 @@
+use crate::context::ast::Ast;
 use crate::data::ast::{BinOp, Expr, Stmt, UnaryOp, VarName};
 use crate::data::token::{Token, TokenId, TokenKind};
 use crate::errors::{ParserError, SyntaxError};
-use crate::states::{AstContext, ParsedInput, TokenizedInput};
+use crate::states::{ParsedState, TokenizedState};
 use std::rc::Rc;
 
 type Result<T> = std::result::Result<T, ParserError>;
 
-pub(crate) fn parse(input: TokenizedInput) -> Result<ParsedInput> {
+pub(crate) fn parse(input: TokenizedState) -> Result<ParsedState> {
     let mut parser = Parser::new(input);
     parser.run()?;
-    Ok(ParsedInput {
-        text_ctx: parser.input.text_ctx,
-        token_ctx: parser.input.token_ctx,
-        ast_ctx: parser.ast_ctx,
+    Ok(ParsedState {
+        source: parser.input.source,
+        token_stream: parser.input.token_stream,
+        ast: parser.ast,
     })
 }
 
@@ -31,8 +32,8 @@ macro_rules! expect {
                 SyntaxError::UnexpectedToken(token.kind.clone()),
                 $self
                     .input
-                    .text_ctx
-                    .error_context($self.input.token_ctx.span_from_id(token.id)),
+                    .source
+                    .error_message($self.input.token_stream.span_from_id(token.id)),
             ))
         }
     }};
@@ -62,31 +63,31 @@ macro_rules! parse_node {
     ($self:ident, $code:block) => {{
         let start = $self.cur_id();
         let node = { $code };
-        $self.ast_ctx.push_span(node.id, start, $self.prev_id());
+        $self.ast.push_span(node.id, start, $self.prev_id());
         Ok(node)
     }};
 }
 
 struct Parser {
-    input: TokenizedInput,
-    ast_ctx: AstContext,
+    input: TokenizedState,
+    ast: Ast,
 
     // state
     pos: usize,
 }
 
 impl Parser {
-    fn new(input: TokenizedInput) -> Self {
+    fn new(input: TokenizedState) -> Self {
         Self {
             input,
-            ast_ctx: AstContext::default(),
+            ast: Ast::default(),
             pos: 0,
         }
     }
 
     #[inline]
     fn tokens(&self) -> &[Rc<Token>] {
-        &self.input.tokens()
+        self.input.tokens()
     }
 
     fn peek(&self) -> Option<&TokenKind> {
@@ -95,7 +96,7 @@ impl Parser {
 
     fn next(&mut self) -> Option<Rc<Token>> {
         self.pos += 1;
-        let token = self.tokens().get(self.pos - 1).map(|t| t.clone());
+        let token = self.tokens().get(self.pos - 1).cloned();
         token
     }
 
@@ -112,8 +113,8 @@ impl Parser {
             let start = self.cur_id();
             let stmt = self.parse_stmt()?;
 
-            self.ast_ctx.push_span(stmt.id, start, self.prev_id());
-            self.ast_ctx.push_stmt(stmt);
+            self.ast.push_span(stmt.id, start, self.prev_id());
+            self.ast.push_stmt(stmt);
         }
 
         Ok(())
@@ -178,12 +179,12 @@ impl Parser {
         while let Some(op_token) = accept!(self, TokenKind::Plus | TokenKind::Minus) {
             // create binop node and push span
             let op = BinOp::new(&op_token.kind);
-            self.ast_ctx
+            self.ast
                 .push_span(op.id, Some(op_token.id), Some(op_token.id));
 
             let rhs = self.parse_mul_term()?;
             lhs = Expr::bin_op(op, lhs, rhs);
-            self.ast_ctx.push_span(lhs.id, start, self.prev_id());
+            self.ast.push_span(lhs.id, start, self.prev_id());
             start = self.cur_id();
         }
         Ok(lhs)
@@ -195,12 +196,12 @@ impl Parser {
         while let Some(op_token) = accept!(self, TokenKind::Slash | TokenKind::Star) {
             // create binop node and push span
             let op = BinOp::new(&op_token.kind);
-            self.ast_ctx
+            self.ast
                 .push_span(op.id, Some(op_token.id), Some(op_token.id));
 
             let rhs = self.parse_factor()?;
             lhs = Expr::bin_op(op, lhs, rhs);
-            self.ast_ctx.push_span(lhs.id, start, self.prev_id());
+            self.ast.push_span(lhs.id, start, self.prev_id());
             start = self.cur_id();
         }
         Ok(lhs)
@@ -222,7 +223,7 @@ impl Parser {
         parse_node!(self, {
             let tok = expect!(self, TokenKind::Int(_))?;
             if let TokenKind::Int(ref n) = tok.kind {
-                Expr::integer(n.clone())
+                Expr::integer(*n)
             } else {
                 unreachable!()
             }
@@ -233,7 +234,7 @@ impl Parser {
         parse_node!(self, {
             let tok = expect!(self, TokenKind::Float(_))?;
             if let TokenKind::Float(ref n) = tok.kind {
-                Expr::float(n.clone())
+                Expr::float(*n)
             } else {
                 unreachable!()
             }
@@ -253,12 +254,12 @@ impl Parser {
 
         // create binop node
         let op = UnaryOp::new(&op_token.kind);
-        self.ast_ctx
+        self.ast
             .push_span(op.id, Some(op_token.id), Some(op_token.id));
 
         let sub_expr = self.parse_factor()?;
         let expr = Expr::unary_op(op, sub_expr);
-        self.ast_ctx.push_span(expr.id, start, self.prev_id());
+        self.ast.push_span(expr.id, start, self.prev_id());
 
         Ok(expr)
     }
@@ -288,14 +289,14 @@ impl Parser {
         let token_id = self.tokens().last().map(|t| t.id);
 
         let span = if let Some(token_id) = token_id {
-            self.input.token_ctx.span_from_id(token_id)
+            self.input.token_stream.span_from_id(token_id)
         } else {
             None
         };
 
         ParserError::SyntaxError(
             SyntaxError::UnexpectedEndOfFile,
-            self.input.text_ctx.error_context(span),
+            self.input.source.error_message(span),
         )
     }
 }

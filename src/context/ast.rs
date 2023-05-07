@@ -1,19 +1,16 @@
 use crate::data::ast::{NodeId, Stmt};
 use crate::data::token::TokenId;
-use crate::states::{AstContext, TokSpan};
+use crate::data::token_span::TokSpan;
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
-impl Default for AstContext {
-    fn default() -> Self {
-        Self {
-            stmts: vec![],
-            node_spans: BTreeMap::new(),
-        }
-    }
+#[derive(Debug, Default)]
+pub struct Ast {
+    stmts: Vec<Stmt>,
+    node_spans: BTreeMap<NodeId, TokSpan>,
 }
 
-impl AstContext {
+impl Ast {
     pub fn stmts(&self) -> &[Stmt] {
         &self.stmts
     }

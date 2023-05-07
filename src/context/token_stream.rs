@@ -2,10 +2,18 @@
 
 use crate::data::span::Span;
 use crate::data::token::{Token, TokenId};
-use crate::states::{TokSpan, TokenContext};
+use crate::data::token_span::TokSpan;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
-impl TokenContext {
+#[derive(Debug, Default)]
+pub struct TokenStream {
+    tokens: Vec<Rc<Token>>,
+    tokens_by_id: BTreeMap<TokenId, Rc<Token>>,
+    token_spans: BTreeMap<TokenId, Span>,
+}
+
+impl TokenStream {
     pub fn tokens(&self) -> &[Rc<Token>] {
         &self.tokens
     }
