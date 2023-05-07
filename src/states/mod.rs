@@ -4,10 +4,12 @@
 //! [`TokenStream`] context ("state data") is used in both the [`TokenizedState`] and the
 //! [`ParsedState`]).
 
+pub mod checked_state;
 pub mod input_state;
 pub mod parsed_state;
 pub mod tokenized_state;
 
+pub use checked_state::*;
 pub use input_state::*;
 pub use parsed_state::*;
 pub use tokenized_state::*;

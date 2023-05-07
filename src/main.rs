@@ -52,6 +52,17 @@ enum Commands {
         #[arg(short)]
         code: Option<String>,
     },
+
+    /// Parses the input and display the AST
+    #[clap(aliases = &["chk", "checker"])]
+    Check {
+        /// Path to wabbit source file (or stdin if not present)
+        path: Option<PathBuf>,
+
+        /// Wabbit source code
+        #[arg(short)]
+        code: Option<String>,
+    },
 }
 
 fn get_input(path: Option<PathBuf>, code: Option<String>) -> anyhow::Result<InputState> {
@@ -87,6 +98,13 @@ fn main() -> anyhow::Result<()> {
             let tokenized_input = input.tokenize()?;
             let ast = tokenized_input.parse()?;
             ast.format(&mut dump)?;
+        }
+        Commands::Check { path, code } => {
+            let input = get_input(path, code)?;
+            let tokenized_input = input.tokenize()?;
+            let parsed = tokenized_input.parse()?;
+            let checked = parsed.check()?;
+            checked.checked_ast.dump(&mut dump)?;
         }
     }
 
