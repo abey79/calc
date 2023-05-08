@@ -148,21 +148,79 @@ pub struct Ast<M: Debug + Display> {
 
 #### Pipeline functions
 
-TODO
+Some pipeline functions are state transition functions which take a state and create another state. In this case, the input state is moved into the function, which then moves its pre-existing contexts into the output state (along with newly created/modified contexts). The parser is such a function: it transforms a `TokenizedState` into a `ParsedState`.
 
-- basically just a function that takes a state and create another state (visible in the schematic above)
-  - move semantics with "actual" state as output
-  - reference semantics for textual output (interp, fmt, codegen)
-- structure to hold the state data of the pipeline stage
+Others functions take an immutable reference to a state and generate some textual output, for example the formatter or the interpreter.
+
+Although these actually are simple functions, their implementation typically use a temporary struct to hold the state they operate on. Here is an example:
+
+```rust
+type Result<T> = std::result::Result<T, ParserError>;
+
+pub(crate) fn parse(input: TokenizedState) -> Result<ParsedState> {
+    let mut parser = Parser::new(input);
+    parser.run()?;
+    Ok(ParsedState {
+        source: parser.input.source,
+        token_stream: parser.input.token_stream,
+        raw_ast: parser.ast,
+    })
+}
+
+struct Parser {
+    // input (a state)
+    input: TokenizedState,
+    
+    // output (a context)
+    ast: Ast<TokSpan>,
+
+    // state
+    pos: usize, // position in the token stream
+    token_stack: Vec<Rc<Token>>, // stack of token to help with TokSpan
+}
+
+impl Parser { /* ... */ }
+```
 
 #### Error management
 
-TODO
+Error reporting, though oft left aside by textbooks, is key for a compiler UX. One key aspect is to provide an error message with the location of the error. This can be done by printing a line of code and underlining the problematic section. Here is how _calc_ achieves this.
 
-- `thiserror` :heart:
-- "language" errors (syntax, type)
-- pipeline errors, often refer to language error, attaching an error message
-- `Source` context can build error message based on span
+- The `Span` object models a starting and ending character. It's attached to tokens by the tokenizer.
+- The `TokSpan` object contains a starting and ending token. It can be converted into a `Span` and is attached to AST nodes by the parser.
+- The `Spanned` trait is for objects that can be turned into spans. Lots of things are `Spanned`, amongst which `Span`, `TokSpan` and `Meta<K, M: Spanned>`, so pretty much everything else, including AST nodes and tokens.
+- `ErrorSpan` is a newtype wrapper over `String`, which is the textual representation of a `Span` with source code extract and underline. Any `Spanned` can construct an `ErrorSpan` using a reference to a `Source` context.
 
+(Note: `ErrorSpan` is the fourth or fifth name I give to that structure. Free Internet points for anyone providing me with a better name. `Context` is already something else, so is `ErrorMessage`, and basically everything else I could think of.)
 
+The errors themselves are split in two categories:
+- Language errors, currently including `SyntaxError` and `TypeError`.
+- Pipeline stage specific errors, e.g. `TokenizerError`, `ParserError`, etc.
 
+One error variant of the latter category typically refers to one of the former, attaching an `ErrorSpan`:
+
+```rust
+#[derive(thiserror::Error)]
+pub enum SyntaxError {
+    #[error("unexpected end of file")]
+    UnexpectedEndOfFile,
+
+    #[error("unexpected character '{0}'")]
+    UnexpectedCharacter(char),
+
+    // many, many, many more errors in a real-world language
+}
+
+#[derive(thiserror::Error)]
+pub enum TokenizerError {
+    #[error("{1}Syntax error:{0}")]
+    SyntaxError(SyntaxError, ErrorSpan),
+}
+```
+
+This approach enables a few things:
+- Each pipeline stage has its own error type, and define its own `Result` type at the top of the file.
+- Language-related errors can be shared between various pipeline stages (e.g. both the tokenizer and the parser could encounter an unexpected EOF).
+- Avoids the pollution of _every_ language error variant with an `ErrorSpan`.
+
+I'm using `thiserror` for the "library" part of the project (i.e. most of it), and `anyhow` for the CLI part.
