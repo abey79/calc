@@ -8,6 +8,52 @@ I took the May 2023 session of [David Beazley](https://www.dabeaz.com)'s [Write 
 
 Although my project was a success, I was dissatisfied with the architecture and decided to rewrite everything from scratch... again. The goal was to implement a smaller language (basically a calculator) to focus on an architecture that would easily scale to Wabbit and beyond, use the learnings from the course.
 
+## Installation
+
+Either clone the repo and use `cargo run`, or `cargo install --git https://github.com/abey79/calc`.
+
+## Usage
+
+CLI help is availalbe with:
+
+```
+$ calc --help
+calc -- a complex compiler for a simple language
+
+Usage: calc [OPTIONS] <COMMAND>
+
+Commands:
+  tokenize  Tokenize the input and display the tokens
+  parse     Parse the input and display the AST
+  format    Parse the input and print a formatted version of it
+  check     Run the type checker on the input
+  run       Run the interpreter on the input
+  help      Print this message or the help of the given subcommand(s)
+
+Options:
+  -o, --optimize  Run the optimizer
+  -h, --help      Print help
+  -V, --version   Print version
+```
+
+If you are using cargo, use `cargo run -- --help` instead.
+
+The various commands can be used to run the pipeline up to the corresponding stage. Each command can take multiple form:
+
+```bash
+# run inline code
+$ calc run -c "print 30 + 7;"
+37
+
+# run a source file
+$ calc run input.txt
+37
+
+# run from stdin
+$ echo "print 30 + 7;" | calc run
+37
+```
+
 ## The _calc_ language
 
 _calc_ has statements, ended with a semi-colon:
@@ -42,14 +88,10 @@ This project implements the following compiler stages:
 - A code formatter
 - A type checker
 - An optimizer
-- An interpreter (TODO)
+- An interpreter
 - An LLVM code generator (TODO)
 
 None of these stages have a particularly fancy implementation, but the architecture should resist a healthy dose of added complexity.
-
-## Usage
-
-TODO
 
 ## Architecture
 
@@ -82,11 +124,11 @@ Two types of structures are involved:
 
 The various contexts are progressively accumulated by states as the pipeline progresses. For example, the `Input` state only has a `Source` context, whereas the `Tokenized` state has both `Source` and `TokenStream` contexts.
 
-TODO list of context:
-- source: code
-- tokenstream: token, which have spans
-- ast: ast tree, node have token spans
-- checked ast: ast tree with type information, list of types
+Here are the context used by _calc_:
+- `Source`: just the input source code (basically a newtype wrapper over `String`).
+- `TokenStream`: a vector of `Token`, created by the tokenizer.
+- `Ast<TokSpan>`: an AST tree where nodes are decorated with token spans (see below for details), created by the parser.
+- `Ast<TypeInfo>`: an AST tree where nodes are decorated with typing information, created by the type checker.
 
 #### Data sharing between context
 
