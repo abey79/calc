@@ -30,3 +30,9 @@ impl<K, I> AsRef<K> for Meta<K, I> {
         &self.kind
     }
 }
+
+impl<M> AsRef<str> for Meta<String, M> {
+    fn as_ref(&self) -> &str {
+        self.kind.as_ref()
+    }
+}

@@ -28,13 +28,13 @@ impl<M: Debug + Display> Ast<M> {
         self.stmts.push(stmt);
     }
 
-    pub fn format<W: fmt::Write>(&self, w: &mut W) -> Result<String, fmt::Error> {
+    pub fn format<W: Write>(&self, w: &mut W) -> Result<String, fmt::Error> {
         pipeline::formatter::format(self, w)
     }
 }
 
 impl Ast<TokSpan> {
-    pub fn dump<W: Write>(&self, w: &mut W) -> std::fmt::Result {
+    pub fn dump<W: Write>(&self, w: &mut W) -> fmt::Result {
         for stmt in self.stmts() {
             writeln!(w, "\n{:#?}", stmt)?;
         }

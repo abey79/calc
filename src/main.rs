@@ -10,14 +10,14 @@ mod errors;
 mod pipeline;
 mod states;
 
-/// the dabbit compiler
+/// calc -- a complex compiler for a simple language
 #[derive(clap::Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    /// Optimize the output
+    /// Run the optimizer
     #[arg(short, long)]
     optimize: bool,
 }
@@ -30,40 +30,51 @@ enum Commands {
         /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
-        /// Wabbit source code
+        /// Source code
         #[arg(short)]
         code: Option<String>,
     },
 
-    /// Parses the input and display the AST
+    /// Parse the input and display the AST
     #[clap(aliases = &["ast"])]
     Parse {
         /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
-        /// Wabbit source code
+        /// Source code
         #[arg(short)]
         code: Option<String>,
     },
 
-    /// Parses the input and display the AST
+    /// Parse the input and print a formatted version of it
     #[clap(aliases = &["fmt", "formatter"])]
     Format {
         /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
-        /// Wabbit source code
+        /// Source code
         #[arg(short)]
         code: Option<String>,
     },
 
-    /// Parses the input and display the AST
+    /// Run the type checker on the input
     #[clap(aliases = &["chk", "checker"])]
     Check {
         /// Path to source file (or stdin if not present)
         path: Option<PathBuf>,
 
-        /// Wabbit source code
+        /// Source code
+        #[arg(short)]
+        code: Option<String>,
+    },
+
+    /// Run the interpreter on the input
+    #[clap(aliases = &["interp"])]
+    Run {
+        /// Path to source file (or stdin if not present)
+        path: Option<PathBuf>,
+
+        /// Source code
         #[arg(short)]
         code: Option<String>,
     },
@@ -128,6 +139,19 @@ fn main() -> anyhow::Result<()> {
                 optimized.ast.dump(&mut dump)?;
             } else {
                 checked.ast.dump(&mut dump)?;
+            }
+        }
+        Commands::Run { path, code } => {
+            let input = get_input(path, code)?;
+            let tokenized_input = input.tokenize()?;
+            let parsed = tokenized_input.parse()?;
+            let checked = parsed.check()?;
+
+            if cli.optimize {
+                let optimized = checked.optimize();
+                optimized.interpret(&mut dump)?;
+            } else {
+                checked.interpret(&mut dump)?;
             }
         }
     }

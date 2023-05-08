@@ -7,7 +7,9 @@ use crate::context::checked_ast::CheckedAst;
 use crate::context::source::Source;
 use crate::context::token_stream::TokenStream;
 use crate::data::token_span::TokSpan;
+use crate::errors::InterpreterError;
 use crate::pipeline;
+use std::fmt::Write;
 
 pub struct CheckedState {
     pub(crate) source: Source,
@@ -19,5 +21,9 @@ pub struct CheckedState {
 impl CheckedState {
     pub fn optimize(self) -> Self {
         pipeline::optimizer::optimize(self)
+    }
+
+    pub fn interpret<W: Write>(&self, writer: &mut W) -> Result<(), InterpreterError> {
+        pipeline::interpreter::interpret(self, writer)
     }
 }
