@@ -1,5 +1,6 @@
 //! A span is a range withing a text stream.
 
+use crate::errors::error_message::Spanned;
 use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,5 +45,11 @@ impl fmt::Display for Span {
         } else {
             write!(f, "-{}:{}", self.end.line, self.end.col)
         }
+    }
+}
+
+impl Spanned for Span {
+    fn span(&self) -> Span {
+        *self
     }
 }

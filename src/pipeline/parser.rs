@@ -2,7 +2,7 @@ use crate::context::ast::Ast;
 use crate::data::ast::{BinOp, Expr, Stmt, UnaryOp, VarName};
 use crate::data::token::{Token, TokenKind};
 use crate::data::token_span::TokSpan;
-use crate::errors::{ParserError, SyntaxError};
+use crate::errors::{ParserError, Spanned, SyntaxError};
 use crate::states::{ParsedState, TokenizedState};
 use std::rc::Rc;
 
@@ -31,7 +31,7 @@ macro_rules! expect {
         } else {
             Err(ParserError::SyntaxError(
                 SyntaxError::UnexpectedToken(token.kind.clone()),
-                $self.input.source.error_message(Some(token.span())),
+                token.to_error(&$self.input.source),
             ))
         }
     }};
@@ -299,11 +299,12 @@ impl Parser {
     ///
     /// For this, we create a span based on the end location of the last token.
     fn end_of_file_err(&self) -> ParserError {
-        let span = self.tokens().last().map(|t| t.span());
+        let msg = self
+            .tokens()
+            .last()
+            .map(|t| t.to_error(&self.input.source))
+            .unwrap_or_default();
 
-        ParserError::SyntaxError(
-            SyntaxError::UnexpectedEndOfFile,
-            self.input.source.error_message(span),
-        )
+        ParserError::SyntaxError(SyntaxError::UnexpectedEndOfFile, msg)
     }
 }

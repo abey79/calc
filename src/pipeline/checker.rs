@@ -2,6 +2,7 @@ use crate::context::checked_ast::{CheckedAst, CheckedExpr, CheckedStmt, Type, Ty
 use crate::data::ast::{BinOp, Expr, ExprKind, Stmt, StmtKind, UnaryOp, VarName};
 use crate::data::meta::Meta;
 use crate::data::token_span::TokSpan;
+use crate::errors::error_message::Spanned;
 use crate::errors::{CheckerError, SyntaxError, TypeError};
 use crate::states::{CheckedState, ParsedState};
 use std::collections::HashMap;
@@ -130,10 +131,10 @@ impl<'a> Checker<'a> {
     }
 
     fn type_err<K>(&self, err: TypeError, node: &Meta<K, TokSpan>) -> CheckerError {
-        CheckerError::TypeError(err, self.input.source.error_message(Some(node.meta.span())))
+        CheckerError::TypeError(err, node.to_error(&self.input.source))
     }
 
     fn syntax_err<K>(&self, err: SyntaxError, node: &Meta<K, TokSpan>) -> CheckerError {
-        CheckerError::SyntaxError(err, self.input.source.error_message(Some(node.meta.span())))
+        CheckerError::SyntaxError(err, node.to_error(&self.input.source))
     }
 }

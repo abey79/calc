@@ -4,7 +4,9 @@
 
 use crate::context::ast::Ast;
 use crate::data::ast::{Expr, Stmt};
+use crate::data::span::Span;
 use crate::data::token_span::TokSpan;
+use crate::errors::error_message::Spanned;
 use std::fmt;
 use std::fmt::Write;
 
@@ -64,5 +66,11 @@ impl TypeInfo {
 impl fmt::Display for TypeInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.type_)
+    }
+}
+
+impl Spanned for TypeInfo {
+    fn span(&self) -> Span {
+        self.tok_span.span()
     }
 }

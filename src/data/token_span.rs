@@ -1,5 +1,6 @@
 use crate::data::span::Span;
 use crate::data::token::Token;
+use crate::errors::error_message::Spanned;
 use std::fmt;
 use std::rc::Rc;
 
@@ -22,5 +23,11 @@ impl TokSpan {
 impl fmt::Display for TokSpan {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.span().fmt(f)
+    }
+}
+
+impl Spanned for TokSpan {
+    fn span(&self) -> Span {
+        self.span()
     }
 }

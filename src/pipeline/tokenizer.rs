@@ -5,7 +5,7 @@
 use crate::context::token_stream::TokenStream;
 use crate::data::span::{Loc, Span};
 use crate::data::token::{Token, TokenKind};
-use crate::errors::{SyntaxError, TokenizerError};
+use crate::errors::{Spanned, SyntaxError, TokenizerError};
 use crate::states::{InputState, TokenizedState};
 
 type Result<T> = std::result::Result<T, TokenizerError>;
@@ -96,7 +96,7 @@ impl Tokenizer {
 
     fn err<T>(&self, err: SyntaxError) -> Result<T> {
         let span = Span::new(self.loc, self.loc);
-        let new_err = TokenizerError::SyntaxError(err, self.input.source.error_message(Some(span)));
+        let new_err = TokenizerError::SyntaxError(err, span.to_error(&self.input.source));
 
         Err(new_err)
     }
