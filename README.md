@@ -4,9 +4,9 @@ _A complex compiler for a simple language._
 
 ## What's this?
 
-I took the May 2023 session of [David Beazley](https://www.dabeaz.com)'s [Write a compiler course](https://www.dabeaz.com/compiler.html)—which I highly recommand. As course work, I wrote a compiler for Wabbit (statically-typed laguage designed for the course) in Rust.
+I took the May 2023 session of [David Beazley](https://www.dabeaz.com)'s [Write a compiler course](https://www.dabeaz.com/compiler.html)—which I highly recommand. As course work, I wrote a compiler for Wabbit (a statically-typed laguage designed for the course) in Rust.
 
-Although my project was a success, I was dissatisfied with the architecture and decided to rewrite everything from scratch... again. The goal was to implement a smaller language (basically a calculator) to focus on an architecture that would easily scale to Wabbit and beyond, use the learnings from the course.
+Although my project was a success, I was dissatisfied with the architecture and decided to rewrite everything from scratch... again. The goal was to implement a smaller language (basically a calculator) to focus on an architecture that would easily scale to Wabbit and beyond, using the learnings from the course.
 
 ## Installation
 
@@ -63,11 +63,19 @@ print 1;
 print 2.3;
 ```
 
-_calc_ is typed and supports `int` and `float`:
+_calc_ is typed and, although the language doesn't have explicit type names, it supports `int` and `float` built-in type. Those types are incompatible between each other:
 
 ```
-print 1 / 2.3;  // type error!
+$ calc run -c "print 1 / 2.3;"
+Error: 
+
+   1 | print 1 / 2.3;
+     |         ^
+
+Type error: mismatched types int and float for binary operator
 ```
+
+This is annoying, but that's ok since the purpose of _calc_ isn't really to be used—and this justifies the type checker's existance.
 
 _calc_ support variables:
 
@@ -89,7 +97,7 @@ This project implements the following compiler stages:
 - A type checker
 - An optimizer
 - An interpreter
-- An LLVM code generator (TODO)
+- An LLVM code generator (WIP)
 
 None of these stages have a particularly fancy implementation, but the architecture should resist a healthy dose of added complexity.
 
@@ -266,3 +274,7 @@ This approach enables a few things:
 - Avoids the pollution of _every_ language error variant with an `ErrorSpan`.
 
 I'm using `thiserror` for the "library" part of the project (i.e. most of it), and `anyhow` for the CLI part.
+
+## License
+
+This project is licenced under CC0 (public domain).
