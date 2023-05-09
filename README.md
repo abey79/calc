@@ -4,7 +4,7 @@ _A complex compiler for a simple language._
 
 ## What's this?
 
-I took the May 2023 session of [David Beazley](https://www.dabeaz.com)'s [Write a compiler course](https://www.dabeaz.com/compiler.html)—which I highly recommand. As course work, I wrote a compiler for Wabbit (a statically-typed laguage designed for the course) in Rust.
+I took the May 2023 session of [David Beazley](https://www.dabeaz.com)'s [Write a compiler course](https://www.dabeaz.com/compiler.html)—which I highly recommend. As course work, I wrote a compiler for Wabbit (a statically-typed language designed for the course) in Rust.
 
 Although my project was a success, I was dissatisfied with the architecture and decided to rewrite everything from scratch... again. The goal was to implement a smaller language (basically a calculator) to focus on an architecture that would easily scale to Wabbit and beyond, using the learnings from the course.
 
@@ -14,7 +14,7 @@ Either clone the repo and use `cargo run`, or `cargo install --git https://githu
 
 ## Usage
 
-CLI help is availalbe with:
+CLI help is available with:
 
 ```
 $ calc --help
@@ -54,9 +54,19 @@ $ echo "print 30 + 7;" | calc run
 37
 ```
 
+Compiling a _calc_ program to a binary executable requires `clang`:
+
+```bash
+$ calc llvm `print 30 + 7;` | clang runtime/runtime.c -x ir - -o prog
+$ ./prog
+37
+```
+
+The `runtime/runtime.c` file is a small runtime written in C (mainly for the `main()` and `print()` functions) and is provided in this project.
+
 ## The _calc_ language
 
-_calc_ has statements, ended with a semi-colon:
+_calc_ has statements, ended with a semicolon:
 
 ```
 print 1;
@@ -75,7 +85,7 @@ Error:
 Type error: mismatched types int and float for binary operator
 ```
 
-This is annoying, but that's ok since the purpose of _calc_ isn't really to be used—and this justifies the type checker's existance.
+This is annoying, but that's ok since the purpose of _calc_ isn't really to be used—and this justifies the type checker's existence.
 
 _calc_ support variables:
 
@@ -97,7 +107,7 @@ This project implements the following compiler stages:
 - A type checker
 - An optimizer
 - An interpreter
-- An LLVM code generator (WIP)
+- An LLVM code generator
 
 None of these stages have a particularly fancy implementation, but the architecture should resist a healthy dose of added complexity.
 
@@ -128,7 +138,7 @@ stateDiagram-v2
 
 Two types of structures are involved:
 - **States** (as in "state machine") to represent the data between compiler pipeline stages.
-- **Context** (term used instead of state as in "state data") are reusable, composable structures to store the actual data of each states.
+- **Context** (term used instead of state as in "state data") are reusable, composable structures to store the actual data of each state.
 
 The various contexts are progressively accumulated by states as the pipeline progresses. For example, the `Input` state only has a `Source` context, whereas the `Tokenized` state has both `Source` and `TokenStream` contexts.
 
@@ -140,7 +150,7 @@ Here are the context used by _calc_:
 
 #### Data sharing between context
 
-Some contexts refer to data from other contexts. For example, the `Ast<TokSpan>` context created by the parser, parameterises its contents with `TokSpan`, which in turn contains references to tokens stored in the `TokenStream` context. For this purpose, `Rc<_>` ref-counted pointers are used.
+Some contexts refer to data from other contexts. For example, the `Ast<TokSpan>` context created by the parser, parameterize its contents with `TokSpan`, which in turn contains references to tokens stored in the `TokenStream` context. For this purpose, `Rc<_>` ref-counted pointers are used.
 
 The `TokenStream` is the "master" list of tokens:
 

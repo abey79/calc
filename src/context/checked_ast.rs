@@ -3,7 +3,7 @@
 //! In this state, all the AST nodes are decorated with type info.
 
 use crate::context::ast::Ast;
-use crate::data::ast::{BinOp, Expr, Stmt, VarName};
+use crate::data::ast::{BinOp, Expr, Stmt, UnaryOp, VarName};
 use crate::data::span::Span;
 use crate::data::token_span::TokSpan;
 use crate::errors::error_message::Spanned;
@@ -15,6 +15,7 @@ pub type CheckedExpr = Expr<TypeInfo>;
 pub type CheckedAst = Ast<TypeInfo>;
 pub type CheckedVarName = VarName<TypeInfo>;
 pub type CheckedBinOp = BinOp<TypeInfo>;
+pub type CheckedUnaryOp = UnaryOp<TypeInfo>;
 
 impl Ast<TypeInfo> {
     pub fn dump<W: Write>(&self, w: &mut W) -> fmt::Result {

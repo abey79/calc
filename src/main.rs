@@ -78,6 +78,17 @@ enum Commands {
         #[arg(short)]
         code: Option<String>,
     },
+
+    /// Compile input to LLVM IR
+    #[clap(aliases = &["codegen"])]
+    Llvm {
+        /// Path to source file (or stdin if not present)
+        path: Option<PathBuf>,
+
+        /// Source code
+        #[arg(short)]
+        code: Option<String>,
+    },
 }
 
 fn get_input(path: Option<PathBuf>, code: Option<String>) -> anyhow::Result<InputState> {
@@ -152,6 +163,19 @@ fn main() -> anyhow::Result<()> {
                 optimized.interpret(&mut dump)?;
             } else {
                 checked.interpret(&mut dump)?;
+            }
+        }
+        Commands::Llvm { path, code } => {
+            let input = get_input(path, code)?;
+            let tokenized_input = input.tokenize()?;
+            let parsed = tokenized_input.parse()?;
+            let checked = parsed.check()?;
+
+            if cli.optimize {
+                let optimized = checked.optimize();
+                optimized.llvm_codegen(&mut dump)?;
+            } else {
+                checked.llvm_codegen(&mut dump)?;
             }
         }
     }

@@ -116,7 +116,7 @@ impl<'a> Checker<'a> {
                 Ok(Expr::unary_op(
                     UnaryOp::new(op.kind, TypeInfo::new(type_, op.tok_span())),
                     checked_expr,
-                    TypeInfo::new(Type::Integer, expr.tok_span()),
+                    TypeInfo::new(type_, expr.tok_span()),
                 ))
             }
             ExprKind::Integer(i) => Ok(Expr::integer(

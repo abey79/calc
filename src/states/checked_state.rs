@@ -9,6 +9,7 @@ use crate::context::token_stream::TokenStream;
 use crate::data::token_span::TokSpan;
 use crate::errors::InterpreterError;
 use crate::pipeline;
+use std::fmt;
 use std::fmt::Write;
 
 pub struct CheckedState {
@@ -25,5 +26,9 @@ impl CheckedState {
 
     pub fn interpret<W: Write>(&self, writer: &mut W) -> Result<(), InterpreterError> {
         pipeline::interpreter::interpret(self, writer)
+    }
+
+    pub fn llvm_codegen<W: Write>(&self, writer: &mut W) -> Result<(), fmt::Error> {
+        pipeline::llvm::llvm_codegen(self, writer)
     }
 }
