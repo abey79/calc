@@ -4,7 +4,7 @@ _A complex compiler for a simple language._
 
 ## What's this?
 
-I took the May 2023 session of [David Beazley](https://www.dabeaz.com)'s [Write a compiler course](https://www.dabeaz.com/compiler.html)—which I highly recommend. As course work, I wrote a compiler for Wabbit (a statically-typed language designed for the course) in Rust.
+I took the May 2023 session of [David Beazley](https://www.dabeaz.com)'s [Write a compiler course](https://www.dabeaz.com/compiler.html)—which I highly recommend. As course work, I wrote [a compiler for Wabbit](https://github.com/abey79/rabbit) (a statically-typed language designed for the course) in Rust.
 
 Although my project was a success, I was dissatisfied with the architecture and decided to rewrite everything from scratch... again. The goal was to implement a smaller language (basically a calculator) to focus on an architecture that would easily scale to Wabbit and beyond, using the learnings from the course.
 
