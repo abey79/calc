@@ -24,6 +24,9 @@ pub enum SyntaxError {
 
     #[error("unknown variable {0}")]
     UnknownVariable(String),
+
+    #[error("empty tuple")]
+    EmptyTuple,
 }
 
 /// Type errors
@@ -34,6 +37,9 @@ pub enum TypeError {
 
     #[error("mismatched types {0} and {1} for binary operator")]
     MismatchedTypesForBinaryOp(Type, Type),
+
+    #[error("heterogeneous tuple")]
+    HeterogeneousTuple,
 }
 
 // =================================================================================================

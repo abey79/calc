@@ -21,6 +21,7 @@ impl LlvmType {
             Self::Builtin(Type::Float) => "0.0",
             Self::Builtin(Type::Integer) => "0",
             Self::Builtin(Type::Stmt) => unreachable!(),
+            Self::Builtin(Type::Tuple { .. }) => todo!(),
         }
     }
 }
@@ -31,6 +32,7 @@ impl fmt::Display for LlvmType {
             LlvmType::Builtin(type_) => match type_ {
                 Type::Integer => write!(f, "i32"),
                 Type::Float => write!(f, "double"),
+                Type::Tuple { .. } => todo!(),
                 Type::Stmt => unreachable!(),
             },
         }
@@ -136,6 +138,7 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
                     Type::Stmt => unreachable!("expression cannot have Stmt type"),
                     Type::Integer => "_print_int",
                     Type::Float => "_print_float",
+                    Type::Tuple { .. } => todo!(),
                 };
 
                 self.out(format!(
@@ -186,10 +189,11 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
         operand: &CheckedExpr,
     ) -> Result<LlvmValue, fmt::Error> {
         let operand = self.codegen_expr(operand)?;
+        let operand_type = operand.type_.clone();
 
         //TODO: should match on operand.type_ when it's properly supported
-        match operand.type_ {
-            LlvmType::Builtin(type_) => self.codegen_unary_op_builtin(&type_, op.kind, operand),
+        match &operand_type {
+            LlvmType::Builtin(type_) => self.codegen_unary_op_builtin(type_, op.kind, operand),
         }
     }
 
@@ -206,6 +210,7 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
                 let (opcode, cst) = match type_ {
                     Type::Integer => ("sub", "0"),
                     Type::Float => ("fsub", "0.0"),
+                    Type::Tuple { .. } => todo!(),
                     Type::Stmt => unreachable!(),
                 };
 
@@ -228,10 +233,11 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
     ) -> Result<LlvmValue, fmt::Error> {
         let left = self.codegen_expr(left)?;
         let right = self.codegen_expr(right)?;
+        let left_type = left.type_.clone();
 
         //TODO: should match on operand.type_ when it's properly supported
-        match left.type_ {
-            LlvmType::Builtin(type_) => self.codegen_bin_op_builtin(&type_, op.kind, left, right),
+        match &left_type {
+            LlvmType::Builtin(type_) => self.codegen_bin_op_builtin(type_, op.kind, left, right),
         }
     }
 
@@ -255,6 +261,7 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
                 BinOpKind::Mul => "fmul",
                 BinOpKind::Div => "fdiv",
             },
+            Type::Tuple { .. } => todo!(),
             Type::Stmt => unreachable!(),
         };
 

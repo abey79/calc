@@ -32,11 +32,12 @@ impl Ast<TypeInfo> {
 // `CheckedAst` would contain a vector of types (including user defined ones). Then, `CheckedInfo`
 // would contain a ref-counted pointer to one of the types.
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Stmt, // stmt only
     Integer,
     Float,
+    Tuple { type_: Box<Type>, len: usize },
 }
 
 impl fmt::Display for Type {
@@ -46,6 +47,7 @@ impl fmt::Display for Type {
             Stmt => write!(f, "stmt"),
             Integer => write!(f, "int"),
             Float => write!(f, "float"),
+            Tuple { type_, len } => write!(f, "({}; {})", type_, len),
         }
     }
 }

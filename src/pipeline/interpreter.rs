@@ -17,6 +17,7 @@ pub(crate) fn interpret<W: Write>(input: &CheckedState, writer: &mut W) -> Resul
 pub enum Value {
     Int(i32),
     Float(f64),
+    Tuple(Vec<Value>),
 }
 
 impl Value {
@@ -34,6 +35,17 @@ impl Value {
                 BinOpKind::Mul => Some(Self::Float(f1 * f2)),
                 BinOpKind::Div => Some(Self::Float(f1 / f2)),
             },
+            (Self::Tuple(t1), Self::Tuple(t2)) => {
+                if t1.len() != t2.len() {
+                    None
+                } else {
+                    let mut res = Vec::new();
+                    for (v1, v2) in t1.iter().zip(t2) {
+                        res.push(v1.bin_op(op, v2)?);
+                    }
+                    Some(Self::Tuple(res))
+                }
+            }
             _ => None,
         }
     }
@@ -48,6 +60,10 @@ impl Value {
                 UnaryOpKind::Pos => Self::Float(*f),
                 UnaryOpKind::Neg => Self::Float(-*f),
             },
+            Self::Tuple(values) => match op {
+                UnaryOpKind::Pos => Self::Tuple(values.clone()),
+                UnaryOpKind::Neg => Self::Tuple(values.iter().map(|v| v.unary_op(op)).collect()),
+            },
         }
     }
 }
@@ -57,6 +73,16 @@ impl fmt::Display for Value {
         match self {
             Value::Int(i) => i.fmt(f),
             Value::Float(fl) => write!(f, "{:?}", fl),
+            Value::Tuple(values) => {
+                write!(f, "(")?;
+                for (i, value) in values.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", value)?;
+                }
+                write!(f, ")")
+            }
         }
     }
 }
@@ -120,7 +146,10 @@ impl<'a, W: Write> Interpreter<'a, W> {
                 let value = left_val.bin_op(&op.kind, &right_val).ok_or_else(|| {
                     // this should never happen as the type checker should have caught this
                     InterpreterError::TypeError(
-                        TypeError::MismatchedTypesForBinaryOp(left.meta.type_, right.meta.type_),
+                        TypeError::MismatchedTypesForBinaryOp(
+                            left.meta.type_.clone(),
+                            right.meta.type_.clone(),
+                        ),
                         op.to_error(&self.input.source),
                     )
                 })?;
@@ -130,7 +159,13 @@ impl<'a, W: Write> Interpreter<'a, W> {
                 let value = self.run_expr(operand)?;
                 Ok(value.unary_op(&op.kind))
             }
-            ExprKind::Tuple(..) => todo!(),
+            ExprKind::Tuple(exprs) => {
+                let mut values = Vec::new();
+                for expr in exprs {
+                    values.push(self.run_expr(expr)?);
+                }
+                Ok(Value::Tuple(values))
+            }
             ExprKind::Integer(i) => Ok(Value::Int(*i)),
             ExprKind::Float(fl) => Ok(Value::Float(*fl)),
         }

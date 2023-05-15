@@ -245,7 +245,12 @@ impl Parser {
                     self.parse_tuple()
                 }
             }
-            Some(_) => unimplemented!(), //TODO: error handling
+            Some(token) => Err(ParserError::SyntaxError(
+                SyntaxError::UnexpectedToken(token.clone()),
+                self.next()
+                    .expect("peek means a token exists")
+                    .to_error(&self.input.source),
+            )),
             None => Err(self.end_of_file_err()),
         }
     }

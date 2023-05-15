@@ -24,7 +24,7 @@ struct Checker<'a> {
     input: &'a ParsedState,
 
     // state
-    vars: HashMap<String, Type>,
+    vars: HashMap<String, Type>, //TODO: custom types may be duplicated there
 }
 
 impl<'a> Checker<'a> {
@@ -48,8 +48,8 @@ impl<'a> Checker<'a> {
         match &stmt.kind {
             StmtKind::Assign { name, value } => {
                 let checked_value = self.check_expr(value)?;
-                let type_ = checked_value.meta.type_;
-                self.vars.insert(name.kind.clone(), type_);
+                let type_ = checked_value.meta.type_.clone();
+                self.vars.insert(name.kind.clone(), type_.clone());
                 Ok(Stmt::assign(
                     VarName::new(&name.kind, TypeInfo::new(type_, name.tok_span())),
                     checked_value,
@@ -78,8 +78,8 @@ impl<'a> Checker<'a> {
             ExprKind::Variable(name) => {
                 if let Some(type_) = self.vars.get(&name.kind) {
                     Ok(Expr::variable(
-                        VarName::new(&name.kind, TypeInfo::new(*type_, name.tok_span())),
-                        TypeInfo::new(*type_, expr.tok_span()),
+                        VarName::new(&name.kind, TypeInfo::new(type_.clone(), name.tok_span())),
+                        TypeInfo::new(type_.clone(), expr.tok_span()),
                     ))
                 } else {
                     Err(self.syntax_err(SyntaxError::UnknownVariable(name.kind.clone()), expr))
@@ -88,8 +88,8 @@ impl<'a> Checker<'a> {
             ExprKind::BinOp { op, left, right } => {
                 let checked_left = self.check_expr(left)?;
                 let checked_right = self.check_expr(right)?;
-                let left_type = checked_left.meta.type_;
-                let right_type = checked_right.meta.type_;
+                let left_type = checked_left.meta.type_.clone();
+                let right_type = checked_right.meta.type_.clone();
 
                 if left_type != right_type {
                     return Err(self.type_err(
@@ -99,7 +99,7 @@ impl<'a> Checker<'a> {
                 }
 
                 Ok(Expr::bin_op(
-                    BinOp::new(op.kind, TypeInfo::new(left_type, op.tok_span())),
+                    BinOp::new(op.kind, TypeInfo::new(left_type.clone(), op.tok_span())),
                     checked_left,
                     checked_right,
                     TypeInfo::new(left_type, expr.tok_span()),
@@ -107,19 +107,50 @@ impl<'a> Checker<'a> {
             }
             ExprKind::UnaryOp { op, operand } => {
                 let checked_expr = self.check_expr(operand)?;
-                let type_ = checked_expr.meta.type_;
+                let type_ = checked_expr.meta.type_.clone();
 
                 if !matches!(type_, Type::Integer | Type::Float) {
                     return Err(self.type_err(TypeError::InvalidTypeForUnaryOp(type_), expr));
                 }
 
                 Ok(Expr::unary_op(
-                    UnaryOp::new(op.kind, TypeInfo::new(type_, op.tok_span())),
+                    UnaryOp::new(op.kind, TypeInfo::new(type_.clone(), op.tok_span())),
                     checked_expr,
                     TypeInfo::new(type_, expr.tok_span()),
                 ))
             }
-            ExprKind::Tuple(..) => todo!(),
+            ExprKind::Tuple(exprs) => {
+                // check homogeneous
+
+                if exprs.is_empty() {
+                    return Err(self.syntax_err(SyntaxError::EmptyTuple, expr));
+                }
+
+                let mut checked_exprs = Vec::new();
+                let ref_expr = self.check_expr(&exprs[0])?;
+                let type_ = ref_expr.meta.type_.clone();
+                checked_exprs.push(ref_expr);
+
+                for expr in &exprs[1..] {
+                    let checked_expr = self.check_expr(expr)?;
+                    if checked_expr.meta.type_ != type_ {
+                        return Err(self.type_err(TypeError::HeterogeneousTuple, expr));
+                    } else {
+                        checked_exprs.push(checked_expr);
+                    }
+                }
+
+                Ok(Expr::tuple(
+                    checked_exprs,
+                    TypeInfo::new(
+                        Type::Tuple {
+                            type_: Box::new(type_),
+                            len: exprs.len(),
+                        },
+                        expr.tok_span(),
+                    ),
+                ))
+            }
             ExprKind::Integer(i) => Ok(Expr::integer(
                 *i,
                 TypeInfo::new(Type::Integer, expr.tok_span()),
