@@ -36,12 +36,37 @@ impl Value {
                 BinOpKind::Div => Some(Self::Float(f1 / f2)),
             },
             (Self::Tuple(t1), Self::Tuple(t2)) => {
-                if t1.len() != t2.len() {
+                // tuple addition and subtraction are element-wise
+                if t1.len() != t2.len() || !matches!(op, BinOpKind::Add | BinOpKind::Sub) {
                     None
                 } else {
                     let mut res = Vec::new();
                     for (v1, v2) in t1.iter().zip(t2) {
                         res.push(v1.bin_op(op, v2)?);
+                    }
+                    Some(Self::Tuple(res))
+                }
+            }
+            (Self::Tuple(t), Self::Int(i)) | (Self::Int(i), Self::Tuple(t)) => {
+                // tuple multiplication and division is scalar multiplication
+                if !matches!(op, BinOpKind::Mul | BinOpKind::Div) {
+                    None
+                } else {
+                    let mut res = Vec::new();
+                    for v in t {
+                        res.push(v.bin_op(op, &Self::Int(*i))?);
+                    }
+                    Some(Self::Tuple(res))
+                }
+            }
+            (Self::Tuple(t), Self::Float(fl)) | (Self::Float(fl), Self::Tuple(t)) => {
+                // tuple multiplication and division is scalar multiplication
+                if !matches!(op, BinOpKind::Mul | BinOpKind::Div) {
+                    None
+                } else {
+                    let mut res = Vec::new();
+                    for v in t {
+                        res.push(v.bin_op(op, &Self::Float(*fl))?);
                     }
                     Some(Self::Tuple(res))
                 }

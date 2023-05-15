@@ -58,6 +58,7 @@ impl Optimizer {
                     (Integer(a), Integer(b)) => Expr::integer(op.eval(*a, *b), expr.meta),
                     (Float(a), Float(b)) => Expr::float(op.eval(*a, *b), expr.meta),
                     _ => Expr::bin_op(op, new_left, new_right, expr.meta),
+                    //TODO: optimize tuple computation
                 }
             }
             _ => expr,

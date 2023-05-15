@@ -1,5 +1,5 @@
 use crate::context::checked_ast::{CheckedAst, CheckedExpr, CheckedStmt, Type, TypeInfo};
-use crate::data::ast::{BinOp, Expr, ExprKind, Stmt, StmtKind, UnaryOp, VarName};
+use crate::data::ast::{BinOp, BinOpKind, Expr, ExprKind, Stmt, StmtKind, UnaryOp, VarName};
 use crate::data::meta::Meta;
 use crate::data::token_span::TokSpan;
 use crate::errors::error_message::Spanned;
@@ -91,18 +91,13 @@ impl<'a> Checker<'a> {
                 let left_type = checked_left.meta.type_.clone();
                 let right_type = checked_right.meta.type_.clone();
 
-                if left_type != right_type {
-                    return Err(self.type_err(
-                        TypeError::MismatchedTypesForBinaryOp(left_type, right_type),
-                        op,
-                    ));
-                }
+                let res_type = self.check_bin_op_type(op, &left_type, &right_type)?;
 
                 Ok(Expr::bin_op(
-                    BinOp::new(op.kind, TypeInfo::new(left_type.clone(), op.tok_span())),
+                    BinOp::new(op.kind, TypeInfo::new(res_type.clone(), op.tok_span())),
                     checked_left,
                     checked_right,
-                    TypeInfo::new(left_type, expr.tok_span()),
+                    TypeInfo::new(res_type, expr.tok_span()),
                 ))
             }
             ExprKind::UnaryOp { op, operand } => {
@@ -160,6 +155,56 @@ impl<'a> Checker<'a> {
                 TypeInfo::new(Type::Float, expr.tok_span()),
             )),
         }
+    }
+
+    fn check_bin_op_type(
+        &mut self,
+        op: &BinOp<TokSpan>,
+        left: &Type,
+        right: &Type,
+    ) -> Result<Type> {
+        let res_type = match (left, right) {
+            (Type::Integer, Type::Integer) => Some(Type::Integer),
+            (Type::Float, Type::Float) => Some(Type::Float),
+            // Element-wise addition/subtraction
+            (Type::Tuple { type_: t1, len: l1 }, Type::Tuple { type_: t2, len: l2 }) => {
+                if matches!(op.kind, BinOpKind::Add | BinOpKind::Sub) && t1 == t2 && l1 == l2 {
+                    Some(left.clone())
+                } else {
+                    None
+                }
+            }
+            // Scalar multiplication/division
+            //TODO: ugly duplication
+            (Type::Tuple { type_, len }, Type::Integer | Type::Float) => {
+                if matches!(op.kind, BinOpKind::Mul | BinOpKind::Div) {
+                    let new_type = self.check_bin_op_type(op, type_, right)?;
+                    Some(Type::Tuple {
+                        type_: Box::new(new_type),
+                        len: *len,
+                    })
+                } else {
+                    None
+                }
+            }
+            (Type::Integer | Type::Float, Type::Tuple { type_, len }) => {
+                if matches!(op.kind, BinOpKind::Mul | BinOpKind::Div) {
+                    let new_type = self.check_bin_op_type(op, left, type_)?;
+                    Some(Type::Tuple {
+                        type_: Box::new(new_type),
+                        len: *len,
+                    })
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        };
+
+        res_type.ok_or(self.type_err(
+            TypeError::MismatchedTypesForBinaryOp(left.clone(), right.clone()),
+            op,
+        ))
     }
 
     fn type_err<K>(&self, err: TypeError, node: &Meta<K, TokSpan>) -> CheckerError {
