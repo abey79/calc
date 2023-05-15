@@ -1,0 +1,55 @@
+---
+source: src/pipeline/parser.rs
+expression: parsed.raw_ast
+---
+Ast {
+    stmts: [
+        [1:1-23] Assign {
+            name: [1:1-1] "a",
+            value: [1:5-22] BinOp {
+                op: [1:17-17] Mul,
+                left: [1:6-14] BinOp {
+                    op: [1:10-10] Add,
+                    left: [1:6-8] Float(
+                        1.3,
+                    ),
+                    right: [1:12-14] Float(
+                        3.2,
+                    ),
+                },
+                right: [1:19-22] Float(
+                    45.1,
+                ),
+            },
+        },
+        [1:25-36] Assign {
+            name: [1:25-25] "b",
+            value: [1:29-35] BinOp {
+                op: [1:31-31] Mul,
+                left: [1:29-29] Variable(
+                    [1:29-29] "a",
+                ),
+                right: [1:33-35] Float(
+                    3.2,
+                ),
+            },
+        },
+        [1:38-53] Print {
+            expr: [1:44-52] BinOp {
+                op: [1:46-46] Add,
+                left: [1:44-44] Integer(
+                    1,
+                ),
+                right: [1:48-52] BinOp {
+                    op: [1:50-50] Mul,
+                    left: [1:48-48] Integer(
+                        2,
+                    ),
+                    right: [1:52-52] Integer(
+                        3,
+                    ),
+                },
+            },
+        },
+    ],
+}

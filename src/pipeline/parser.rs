@@ -308,3 +308,19 @@ impl Parser {
         ParserError::SyntaxError(SyntaxError::UnexpectedEndOfFile, msg)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pipeline::tokenizer::tokenize;
+    use crate::states::InputState;
+
+    #[test]
+    fn test_parser() {
+        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+
+        insta::assert_debug_snapshot!(parsed.raw_ast);
+    }
+}

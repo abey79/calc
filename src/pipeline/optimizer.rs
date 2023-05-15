@@ -39,7 +39,10 @@ impl Optimizer {
     fn optimize_stmt(&mut self, stmt: CheckedStmt) -> CheckedStmt {
         match stmt.kind {
             StmtKind::Expr { expr } => Stmt::expr(self.optimize_expr(expr), stmt.meta),
-            _ => stmt,
+            StmtKind::Assign { name, value } => {
+                Stmt::assign(name, self.optimize_expr(value), stmt.meta)
+            }
+            StmtKind::Print { expr } => Stmt::print(self.optimize_expr(expr), stmt.meta),
         }
     }
 
@@ -73,5 +76,25 @@ impl<M> BinOp<M> {
             BinOpKind::Mul => a * b,
             BinOpKind::Div => a / b,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::pipeline::checker::check;
+    use crate::pipeline::optimizer::optimize;
+    use crate::pipeline::parser::parse;
+    use crate::pipeline::tokenizer::tokenize;
+    use crate::states::InputState;
+
+    #[test]
+    fn test_checker() {
+        let input = InputState::from("print (1 + 4) * 3 / (3 + 2);");
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+        let checked = check(parsed).unwrap();
+        let optimized = optimize(checked);
+
+        insta::assert_debug_snapshot!(optimized.ast);
     }
 }

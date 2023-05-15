@@ -135,3 +135,33 @@ impl<'a, W: Write> Interpreter<'a, W> {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::pipeline::checker::check;
+    use crate::pipeline::interpreter::interpret;
+    use crate::pipeline::parser::parse;
+    use crate::pipeline::tokenizer::tokenize;
+    use crate::states::InputState;
+
+    #[test]
+    fn test_interpreter() {
+        let input = InputState::from(
+            r###"
+                a = (1.3 + 3.2) * 45.1;
+                print a;
+                b = a * 3.2;
+                print b;
+                print 1 + 2 * 3;
+            "###,
+        );
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+        let checked = check(parsed).unwrap();
+
+        let mut output = String::new();
+        interpret(&checked, &mut output).unwrap();
+
+        insta::assert_debug_snapshot!(output);
+    }
+}

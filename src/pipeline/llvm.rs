@@ -1,7 +1,7 @@
 use crate::context::checked_ast::{CheckedBinOp, CheckedExpr, CheckedStmt, CheckedUnaryOp, Type};
 use crate::data::ast::{BinOpKind, ExprKind, StmtKind, UnaryOpKind};
 use crate::states::CheckedState;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt;
 
 pub(crate) fn llvm_codegen<W: fmt::Write>(input: &CheckedState, writer: &mut W) -> fmt::Result {
@@ -55,7 +55,7 @@ struct LlvmCodegen<'a, W: fmt::Write> {
 
     // state
     code: Vec<String>,
-    globals: HashMap<String, LlvmType>,
+    globals: BTreeMap<String, LlvmType>,
     id: usize,
 }
 
@@ -65,7 +65,7 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
             input,
             writer,
             code: Vec::new(),
-            globals: HashMap::new(),
+            globals: BTreeMap::new(),
             id: 0,
         }
     }
@@ -265,5 +265,27 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
         ));
 
         Ok(LlvmValue::new(reg, left.type_))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::pipeline::checker::check;
+    use crate::pipeline::llvm::llvm_codegen;
+    use crate::pipeline::parser::parse;
+    use crate::pipeline::tokenizer::tokenize;
+    use crate::states::InputState;
+
+    #[test]
+    fn test_llvm_codegen() {
+        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+        let checked = check(parsed).unwrap();
+
+        let mut output = String::new();
+        llvm_codegen(&checked, &mut output).unwrap();
+
+        insta::assert_yaml_snapshot!(output.lines().collect::<Vec<_>>());
     }
 }

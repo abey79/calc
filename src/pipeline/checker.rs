@@ -138,3 +138,21 @@ impl<'a> Checker<'a> {
         CheckerError::SyntaxError(err, node.to_error(&self.input.source))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::pipeline::checker::check;
+    use crate::pipeline::parser::parse;
+    use crate::pipeline::tokenizer::tokenize;
+    use crate::states::InputState;
+
+    #[test]
+    fn test_checker() {
+        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+        let checked = check(parsed).unwrap();
+
+        insta::assert_debug_snapshot!(checked.ast);
+    }
+}

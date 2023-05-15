@@ -1,0 +1,5 @@
+---
+source: src/pipeline/formatter.rs
+expression: output
+---
+"a = (1.3 + 3.2) * 45.1;\nb = a * 3.2;\nprint 1 + 2 * 3;\n"

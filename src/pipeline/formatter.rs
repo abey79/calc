@@ -11,10 +11,10 @@ use std::fmt::{Debug, Display, Write};
 pub(crate) fn format<T: Debug + Display, W: Write>(
     input: &Ast<T>,
     writer: &mut W,
-) -> Result<String, fmt::Error> {
+) -> Result<(), fmt::Error> {
     let mut formatter = Formatter::new(input, writer);
     formatter.format()?;
-    Ok(String::new())
+    Ok(())
 }
 
 struct Formatter<'a, T: Debug + Display, W: Write> {
@@ -100,5 +100,54 @@ impl<'a, T: Debug + Display, W: Write> Formatter<'a, T, W> {
         write!(self.writer, "(")?;
         self.format_expr(expr)?;
         write!(self.writer, ")")
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::pipeline::checker::check;
+    use crate::pipeline::formatter::format;
+    use crate::pipeline::optimizer::optimize;
+    use crate::pipeline::parser::parse;
+    use crate::pipeline::tokenizer::tokenize;
+    use crate::states::InputState;
+
+    #[test]
+    fn test_formatter_from_raw_ast() {
+        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+
+        let mut output = String::new();
+        format(&parsed.raw_ast, &mut output).unwrap();
+
+        insta::assert_debug_snapshot!(output);
+    }
+
+    #[test]
+    fn test_formatter_from_checked_ast() {
+        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+        let checked = check(parsed).unwrap();
+
+        let mut output = String::new();
+        format(&checked.ast, &mut output).unwrap();
+
+        insta::assert_debug_snapshot!(output);
+    }
+
+    #[test]
+    fn test_formatter_from_optimized_ast() {
+        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
+        let tokenized = tokenize(input).unwrap();
+        let parsed = parse(tokenized).unwrap();
+        let checked = check(parsed).unwrap();
+        let optimized = optimize(checked);
+
+        let mut output = String::new();
+        format(&optimized.ast, &mut output).unwrap();
+
+        insta::assert_debug_snapshot!(output);
     }
 }

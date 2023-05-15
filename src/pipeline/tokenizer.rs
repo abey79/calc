@@ -190,3 +190,16 @@ impl Tokenizer {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tokenize() {
+        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
+        let tokenized = tokenize(input).unwrap();
+
+        insta::assert_debug_snapshot!(tokenized.token_stream);
+    }
+}

@@ -1,0 +1,5 @@
+---
+source: src/pipeline/formatter.rs
+expression: output
+---
+"a = 202.95000000000002;\nb = a * 3.2;\nprint 7;\n"

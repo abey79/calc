@@ -28,7 +28,7 @@ impl<M: Debug + Display> Ast<M> {
         self.stmts.push(stmt);
     }
 
-    pub fn format<W: Write>(&self, w: &mut W) -> Result<String, fmt::Error> {
+    pub fn format<W: Write>(&self, w: &mut W) -> Result<(), fmt::Error> {
         pipeline::formatter::format(self, w)
     }
 }

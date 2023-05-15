@@ -1,0 +1,13 @@
+---
+source: src/pipeline/optimizer.rs
+expression: optimized.ast
+---
+Ast {
+    stmts: [
+        [stmt] Print {
+            expr: [int] Integer(
+                3,
+            ),
+        },
+    ],
+}

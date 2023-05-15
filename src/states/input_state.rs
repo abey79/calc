@@ -29,6 +29,14 @@ impl From<String> for InputState {
     }
 }
 
+impl From<&str> for InputState {
+    fn from(text: &str) -> Self {
+        Self {
+            source: Source::new(text.to_owned()),
+        }
+    }
+}
+
 impl AsRef<str> for InputState {
     fn as_ref(&self) -> &str {
         self.source.source()
