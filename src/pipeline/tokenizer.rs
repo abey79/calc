@@ -160,6 +160,7 @@ impl Tokenizer {
                 ';' => self.push(TokenKind::Semi),
                 '(' => self.push(TokenKind::LParen),
                 ')' => self.push(TokenKind::RParen),
+                ',' => self.push(TokenKind::Comma),
                 '=' => self.push(TokenKind::Assign),
                 '+' => self.push(TokenKind::Plus),
                 '-' => self.push(TokenKind::Minus),

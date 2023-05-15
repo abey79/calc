@@ -2,4 +2,7 @@
 source: src/pipeline/interpreter.rs
 expression: output
 ---
-"202.95000000000002\n649.44\n7\n"
+202.95000000000002
+649.44
+7
+

@@ -156,6 +156,7 @@ impl<'a, W: fmt::Write> LlvmCodegen<'a, W> {
             ExprKind::Variable(name) => self.codegen_variable(name.as_ref()),
             ExprKind::UnaryOp { op, operand } => self.codegen_unary_op(op, operand),
             ExprKind::BinOp { op, left, right } => self.codegen_bin_op(op, left, right),
+            ExprKind::Tuple(..) => todo!(),
             ExprKind::Integer(i) => Ok(LlvmValue::new(
                 i.to_string(),
                 LlvmType::Builtin(Type::Integer),
@@ -286,6 +287,6 @@ mod test {
         let mut output = String::new();
         llvm_codegen(&checked, &mut output).unwrap();
 
-        insta::assert_yaml_snapshot!(output.lines().collect::<Vec<_>>());
+        insta::assert_snapshot!(output);
     }
 }

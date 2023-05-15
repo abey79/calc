@@ -89,6 +89,19 @@ impl<'a, T: Debug + Display, W: Write> Formatter<'a, T, W> {
                     self.format_expr(operand)?;
                 }
             }
+            ExprKind::Tuple(exprs) => {
+                write!(self.writer, "(")?;
+                for (i, expr) in exprs.iter().enumerate() {
+                    if i > 0 {
+                        write!(self.writer, ", ")?;
+                    }
+                    self.format_expr(expr)?;
+                }
+                if exprs.len() == 1 {
+                    write!(self.writer, ",")?;
+                }
+                write!(self.writer, ")")?;
+            }
             ExprKind::Integer(i) => write!(self.writer, "{}", i)?,
             ExprKind::Float(f) => write!(self.writer, "{:?}", f)?,
         }
@@ -108,46 +121,48 @@ mod test {
     use crate::pipeline::checker::check;
     use crate::pipeline::formatter::format;
     use crate::pipeline::optimizer::optimize;
-    use crate::pipeline::parser::parse;
+    use crate::pipeline::parser;
     use crate::pipeline::tokenizer::tokenize;
-    use crate::states::InputState;
+    use crate::states::{InputState, ParsedState};
+
+    fn parse(input: &str) -> ParsedState {
+        let input = InputState::from(input);
+        let tokenized = tokenize(input).unwrap();
+        parser::parse(tokenized).unwrap()
+    }
 
     #[test]
     fn test_formatter_from_raw_ast() {
-        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
-        let tokenized = tokenize(input).unwrap();
-        let parsed = parse(tokenized).unwrap();
-
+        let parsed = parse("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
         let mut output = String::new();
         format(&parsed.raw_ast, &mut output).unwrap();
-
-        insta::assert_debug_snapshot!(output);
+        insta::assert_snapshot!(output);
     }
 
     #[test]
     fn test_formatter_from_checked_ast() {
-        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
-        let tokenized = tokenize(input).unwrap();
-        let parsed = parse(tokenized).unwrap();
+        let parsed = parse("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
         let checked = check(parsed).unwrap();
-
         let mut output = String::new();
         format(&checked.ast, &mut output).unwrap();
-
-        insta::assert_debug_snapshot!(output);
+        insta::assert_snapshot!(output);
     }
 
     #[test]
     fn test_formatter_from_optimized_ast() {
-        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
-        let tokenized = tokenize(input).unwrap();
-        let parsed = parse(tokenized).unwrap();
+        let parsed = parse("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
         let checked = check(parsed).unwrap();
         let optimized = optimize(checked);
-
         let mut output = String::new();
         format(&optimized.ast, &mut output).unwrap();
+        insta::assert_snapshot!(output);
+    }
 
-        insta::assert_debug_snapshot!(output);
+    #[test]
+    fn test_formatter_tuple() {
+        let parsed = parse("(1, 2, 3); (1, 2, 3,); (1,); (1);");
+        let mut output = String::new();
+        format(&parsed.raw_ast, &mut output).unwrap();
+        insta::assert_snapshot!(output);
     }
 }

@@ -25,7 +25,7 @@ impl<T: Debug + Display> ExprKind<T> {
         match self {
             Self::BinOp { op, .. } => op.kind.precedence(),
             Self::UnaryOp { op, .. } => op.kind.precedence(),
-            Self::Variable(_) | Self::Integer(_) | Self::Float(_) => 255,
+            Self::Variable(_) | Self::Integer(_) | Self::Float(_) | Self::Tuple(_) => 255,
         }
     }
 }

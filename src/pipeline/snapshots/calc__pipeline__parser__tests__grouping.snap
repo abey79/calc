@@ -1,0 +1,14 @@
+---
+source: src/pipeline/parser.rs
+expression: "parse(\"a = (1);\").raw_ast"
+---
+Ast {
+    stmts: [
+        [1:1-8] Assign {
+            name: [1:1-1] "a",
+            value: [1:6-6] Integer(
+                1,
+            ),
+        },
+    ],
+}

@@ -1,0 +1,24 @@
+---
+source: src/pipeline/parser.rs
+expression: "parse(\"a = (1, 2, 3);\").raw_ast"
+---
+Ast {
+    stmts: [
+        [1:1-14] Assign {
+            name: [1:1-1] "a",
+            value: [1:5-13] Tuple(
+                [
+                    [1:6-6] Integer(
+                        1,
+                    ),
+                    [1:9-9] Integer(
+                        2,
+                    ),
+                    [1:12-12] Integer(
+                        3,
+                    ),
+                ],
+            ),
+        },
+    ],
+}

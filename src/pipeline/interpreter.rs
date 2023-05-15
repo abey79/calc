@@ -130,6 +130,7 @@ impl<'a, W: Write> Interpreter<'a, W> {
                 let value = self.run_expr(operand)?;
                 Ok(value.unary_op(&op.kind))
             }
+            ExprKind::Tuple(..) => todo!(),
             ExprKind::Integer(i) => Ok(Value::Int(*i)),
             ExprKind::Float(fl) => Ok(Value::Float(*fl)),
         }
@@ -162,6 +163,6 @@ mod test {
         let mut output = String::new();
         interpret(&checked, &mut output).unwrap();
 
-        insta::assert_debug_snapshot!(output);
+        insta::assert_snapshot!(output);
     }
 }

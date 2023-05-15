@@ -38,6 +38,7 @@ pub enum ExprKind<T: Debug + Display> {
         op: UnaryOp<T>,
         operand: Box<Expr<T>>,
     },
+    Tuple(Vec<Expr<T>>),
     Integer(i32),
     Float(f64),
 }
@@ -132,6 +133,13 @@ impl<T: Debug + Display> Expr<T> {
                 op,
                 operand: Box::new(operand),
             },
+            meta: meta.into(),
+        }
+    }
+
+    pub fn tuple(exprs: Vec<Expr<T>>, meta: impl Into<T>) -> Self {
+        Self {
+            kind: ExprKind::Tuple(exprs),
             meta: meta.into(),
         }
     }

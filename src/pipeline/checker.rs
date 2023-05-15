@@ -119,6 +119,7 @@ impl<'a> Checker<'a> {
                     TypeInfo::new(type_, expr.tok_span()),
                 ))
             }
+            ExprKind::Tuple(..) => todo!(),
             ExprKind::Integer(i) => Ok(Expr::integer(
                 *i,
                 TypeInfo::new(Type::Integer, expr.tok_span()),

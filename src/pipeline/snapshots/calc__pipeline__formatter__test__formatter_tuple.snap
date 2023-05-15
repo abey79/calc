@@ -2,7 +2,8 @@
 source: src/pipeline/formatter.rs
 expression: output
 ---
-a = 202.95000000000002;
-b = a * 3.2;
-print 7;
+(1, 2, 3);
+(1, 2, 3);
+(1,);
+1;
 

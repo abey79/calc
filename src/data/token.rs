@@ -15,6 +15,7 @@ pub enum TokenKind {
     Assign,
     LParen,
     RParen,
+    Comma,
 
     // operators
     Plus,
@@ -37,6 +38,7 @@ impl fmt::Display for TokenKind {
             Assign => write!(f, "'='"),
             LParen => write!(f, "'('"),
             RParen => write!(f, "')'"),
+            Comma => write!(f, "','"),
             Plus => write!(f, "'+'"),
             Minus => write!(f, "'-'"),
             Star => write!(f, "'*'"),

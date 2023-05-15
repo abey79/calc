@@ -226,15 +226,49 @@ impl Parser {
     }
 
     fn parse_factor(&mut self) -> Result<Expr<TokSpan>> {
+        let start_pos = self.pos;
         match self.peek() {
             Some(TokenKind::Int(_)) => self.parse_integer(),
             Some(TokenKind::Float(_)) => self.parse_float(),
             Some(TokenKind::Name(_)) => self.parse_variable(),
             Some(TokenKind::Minus) | Some(TokenKind::Plus) => self.parse_unary_factor(),
-            Some(TokenKind::LParen) => self.parse_grouping(),
+            Some(TokenKind::LParen) => {
+                // tuple or grouping? We start with grouping to emulate Python's behavior:
+                // - (1, 2) is a tuple
+                // - (1) is a grouping
+                // - (1,) is a tuple
+                let res = self.parse_grouping();
+                if res.is_ok() {
+                    res
+                } else {
+                    self.pos = start_pos;
+                    self.parse_tuple()
+                }
+            }
             Some(_) => unimplemented!(), //TODO: error handling
             None => Err(self.end_of_file_err()),
         }
+    }
+
+    fn parse_tuple(&mut self) -> Result<Expr<TokSpan>> {
+        self.mark_start()?;
+
+        expect!(self, TokenKind::LParen)?;
+        let mut exprs = vec![];
+        loop {
+            exprs.push(self.parse_expr()?);
+            if accept!(self, TokenKind::Comma).is_none() {
+                break;
+            }
+
+            // handle the trailing comma pattern
+            if let Some(TokenKind::RParen) = self.peek() {
+                break;
+            }
+        }
+        expect!(self, TokenKind::RParen)?;
+
+        Ok(Expr::tuple(exprs, self.mark_end()?))
     }
 
     fn parse_integer(&mut self) -> Result<Expr<TokSpan>> {
@@ -312,15 +346,27 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::pipeline;
     use crate::pipeline::tokenizer::tokenize;
     use crate::states::InputState;
 
+    fn parse(input: &str) -> ParsedState {
+        let input = InputState::from(input);
+        let tokenized = tokenize(input).unwrap();
+        pipeline::parser::parse(tokenized).unwrap()
+    }
+
     #[test]
     fn test_parser() {
-        let input = InputState::from("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
-        let tokenized = tokenize(input).unwrap();
-        let parsed = parse(tokenized).unwrap();
-
+        let parsed = parse("a = (1.3 + 3.2) * 45.1; b = a * 3.2; print 1 + 2 * 3;");
         insta::assert_debug_snapshot!(parsed.raw_ast);
+    }
+
+    #[test]
+    fn test_parser_tuple() {
+        insta::assert_debug_snapshot!("3-tuple", parse("a = (1, 2, 3);").raw_ast);
+        insta::assert_debug_snapshot!("3-tuple trailing", parse("a = (1, 2, 3,);").raw_ast);
+        insta::assert_debug_snapshot!("grouping", parse("a = (1);").raw_ast);
+        insta::assert_debug_snapshot!("1-tuple trailing", parse("a = (1,);").raw_ast);
     }
 }
